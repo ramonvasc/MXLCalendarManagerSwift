@@ -1,0 +1,6 @@
+framework module MXLCalendarManagerSwift {
+  umbrella header "MXLCalendarManagerSwift-umbrella.h"
+
+  export *
+  module * { export * }
+}

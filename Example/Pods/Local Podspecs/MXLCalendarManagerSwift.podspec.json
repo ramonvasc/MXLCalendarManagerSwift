@@ -1,0 +1,22 @@
+{
+  "name": "MXLCalendarManagerSwift",
+  "version": "0.1.0",
+  "summary": "A short description of MXLCalendarManagerSwift.",
+  "description": "TODO: Add long description of the pod here.",
+  "homepage": "https://github.com/ramonstarcut/MXLCalendarManagerSwift",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "ramonstarcut": "ramon.vasconcelos@starcut.com"
+  },
+  "source": {
+    "git": "https://github.com/ramonstarcut/MXLCalendarManagerSwift.git",
+    "tag": "0.1.0"
+  },
+  "platforms": {
+    "ios": "8.0"
+  },
+  "source_files": "MXLCalendarManagerSwift/Classes/**/*"
+}
