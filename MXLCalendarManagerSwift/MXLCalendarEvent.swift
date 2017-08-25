@@ -766,3 +766,64 @@ class MXLCalendarEvent {
         }
     }
 }
+
+func ==<T: Equatable>(lhs: [T]?, rhs: [T]?) -> Bool {
+    switch (lhs, rhs) {
+    case (.some(let lhs), .some(let rhs)):
+        return lhs == rhs
+    case (.none, .none):
+        return true
+    default:
+        return false
+    }
+}
+
+extension MXLCalendarEvent: Equatable {
+    static func == (lhs: MXLCalendarEvent, rhs: MXLCalendarEvent) -> Bool {
+        return lhs.dateFormatter == rhs.dateFormatter &&
+            lhs.exRuleFrequency == rhs.exRuleFrequency &&
+            lhs.exRuleCount == rhs.exRuleCount &&
+            lhs.exRuleRuleWkSt == rhs.exRuleRuleWkSt &&
+            lhs.exRuleInterval == rhs.exRuleInterval &&
+            lhs.exRuleWeekStart == rhs.exRuleWeekStart &&
+            lhs.exRuleUntilDate == rhs.exRuleUntilDate &&
+            lhs.exRuleBySecond == rhs.exRuleBySecond &&
+            lhs.exRuleByMinute == rhs.exRuleByMinute &&
+            lhs.exRuleByHour == rhs.exRuleByHour &&
+            lhs.exRuleByDay == rhs.exRuleByDay &&
+            lhs.exRuleByMonthDay == rhs.exRuleByMonthDay &&
+            lhs.exRuleByYearDay == rhs.exRuleByYearDay &&
+            lhs.exRuleByWeekNo == rhs.exRuleByWeekNo &&
+            lhs.exRuleByMonth == rhs.exRuleByMonth &&
+            lhs.exRuleBySetPos == rhs.exRuleBySetPos &&
+            lhs.repeatRuleFrequency == rhs.repeatRuleFrequency &&
+            lhs.repeatRuleCount == rhs.repeatRuleCount &&
+            lhs.repeatRuleRuleWkSt == rhs.repeatRuleRuleWkSt &&
+            lhs.repeatRuleInterval == rhs.repeatRuleInterval &&
+            lhs.repeatRuleWeekStart == rhs.repeatRuleWeekStart &&
+            lhs.repeatRuleUntilDate == rhs.repeatRuleUntilDate &&
+            lhs.repeatRuleBySecond == rhs.repeatRuleBySecond &&
+            lhs.repeatRuleByMinute == rhs.repeatRuleByMinute &&
+            lhs.repeatRuleByHour == rhs.repeatRuleByHour &&
+            lhs.repeatRuleByDay == rhs.repeatRuleByDay &&
+            lhs.repeatRuleByMonthDay == rhs.repeatRuleByMonthDay &&
+            lhs.repeatRuleByYearDay == rhs.repeatRuleByYearDay &&
+            lhs.repeatRuleByWeekNo == rhs.repeatRuleByWeekNo &&
+            lhs.repeatRuleByMonth == rhs.repeatRuleByMonth &&
+            lhs.repeatRuleBySetPos == rhs.repeatRuleBySetPos &&
+            lhs.eventExceptionDates == rhs.eventExceptionDates &&
+            lhs.calendar == rhs.calendar &&
+            lhs.eventStartDate == rhs.eventStartDate &&
+            lhs.eventEndDate == rhs.eventEndDate &&
+            lhs.eventCreatedDate == rhs.eventCreatedDate &&
+            lhs.eventLastModifiedDate == rhs.eventLastModifiedDate &&
+            lhs.eventIsAllDay == rhs.eventIsAllDay &&
+            lhs.eventUniqueID == rhs.eventUniqueID &&
+            lhs.eventRecurrenceID == rhs.eventRecurrenceID &&
+            lhs.eventSummary == rhs.eventSummary &&
+            lhs.eventDescription == rhs.eventDescription &&
+            lhs.eventLocation == rhs.eventStatus &&
+            lhs.attendees == rhs.attendees &&
+            lhs.rruleString == rhs.rruleString
+    }
+}

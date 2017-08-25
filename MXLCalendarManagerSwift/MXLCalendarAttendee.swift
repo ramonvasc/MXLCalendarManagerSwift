@@ -43,3 +43,11 @@ class MXLCalendarAttendee {
         self.role = role
     }
 }
+
+extension MXLCalendarAttendee: Equatable {
+    static func == (lhs: MXLCalendarAttendee, rhs: MXLCalendarAttendee) -> Bool {
+        return lhs.uri == rhs.uri &&
+            lhs.commonName == rhs.commonName &&
+            lhs.role == rhs.role
+    }
+}

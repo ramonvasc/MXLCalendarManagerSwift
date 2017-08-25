@@ -116,6 +116,7 @@
 		F693D0A9E0D05F815A85DC258E75AF8D /* CurrentTestCaseTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = CCD0E5C7B919B722CBA4C68A93D55A7A /* CurrentTestCaseTracker.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		F6DE3F301F4EEFAD00E7B2C9 /* MXLCalendarEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6DE3F2F1F4EEFAD00E7B2C9 /* MXLCalendarEvent.swift */; };
 		F6DE3F341F500B0300E7B2C9 /* TimeZone+ProperAbbreviation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6DE3F331F500B0300E7B2C9 /* TimeZone+ProperAbbreviation.swift */; };
+		F6DE3F381F501B4B00E7B2C9 /* MXLCalendar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6DE3F371F501B4B00E7B2C9 /* MXLCalendar.swift */; };
 		F9D61EB5EEB799105913685722FF4C9C /* NimbleEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = F26BA5A6FE4D418C4B347B819197FA63 /* NimbleEnvironment.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
 		F9E05A63D447B51E008B89731192FE7F /* AssertionRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33C4401213EBEC6BC1797D974E52767D /* AssertionRecorder.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
 		FAB4ECE0C5039D99BB7173880670871D /* BeLessThanOrEqual.swift in Sources */ = {isa = PBXBuildFile; fileRef = 104135CFA58204DC8EBF1167E28F5206 /* BeLessThanOrEqual.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
@@ -283,6 +284,7 @@
 		F60662971F4C472B00313A73 /* MXLCalendarAttendee.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MXLCalendarAttendee.swift; path = MXLCalendarManagerSwift/MXLCalendarAttendee.swift; sourceTree = "<group>"; };
 		F6DE3F2F1F4EEFAD00E7B2C9 /* MXLCalendarEvent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MXLCalendarEvent.swift; path = MXLCalendarManagerSwift/MXLCalendarEvent.swift; sourceTree = "<group>"; };
 		F6DE3F331F500B0300E7B2C9 /* TimeZone+ProperAbbreviation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "TimeZone+ProperAbbreviation.swift"; path = "MXLCalendarManagerSwift/TimeZone+ProperAbbreviation.swift"; sourceTree = "<group>"; };
+		F6DE3F371F501B4B00E7B2C9 /* MXLCalendar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MXLCalendar.swift; path = MXLCalendarManagerSwift/MXLCalendar.swift; sourceTree = "<group>"; };
 		F795FA3DE9E15CB7DD017F791C55A8AC /* Nimble-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Nimble-dummy.m"; sourceTree = "<group>"; };
 		F86D341EBB3C688CCCAD11B553796736 /* MXLCalendarManagerSwift-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "MXLCalendarManagerSwift-prefix.pch"; sourceTree = "<group>"; };
 		F9550ABBCFEA5EE7A657664A6BD9E1F7 /* CwlCatchBadInstruction.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = CwlCatchBadInstruction.h; path = Sources/Lib/CwlPreconditionTesting/CwlPreconditionTesting/CwlCatchBadInstruction.h; sourceTree = "<group>"; };
@@ -551,6 +553,7 @@
 		A95CCFF5B4BAF0AB07F689181AB27464 /* MXLCalendarManagerSwift */ = {
 			isa = PBXGroup;
 			children = (
+				F6DE3F371F501B4B00E7B2C9 /* MXLCalendar.swift */,
 				F6DE3F2F1F4EEFAD00E7B2C9 /* MXLCalendarEvent.swift */,
 				F60662971F4C472B00313A73 /* MXLCalendarAttendee.swift */,
 				F6DE3F331F500B0300E7B2C9 /* TimeZone+ProperAbbreviation.swift */,
@@ -889,6 +892,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F6DE3F341F500B0300E7B2C9 /* TimeZone+ProperAbbreviation.swift in Sources */,
+				F6DE3F381F501B4B00E7B2C9 /* MXLCalendar.swift in Sources */,
 				F60662981F4C472B00313A73 /* MXLCalendarAttendee.swift in Sources */,
 				5F38B5254598ABF14062956AB335E713 /* MXLCalendarManagerSwift-dummy.m in Sources */,
 				F6DE3F301F4EEFAD00E7B2C9 /* MXLCalendarEvent.swift in Sources */,
