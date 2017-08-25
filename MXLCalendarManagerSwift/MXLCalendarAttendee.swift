@@ -25,11 +25,12 @@
 
 import Foundation
 
-enum Role {
+enum Role: String {
     case CHAIR
     case REQ_PARTICIPANT
     case OPT_PARTICIPANT
     case NON_PARTICIPANT
+
 }
 
 class MXLCalendarAttendee {
