@@ -105,7 +105,7 @@ class MXLCalendarEvent {
          location: String,
          status: String,
          recurrenceRules: String,
-         exceptionDates: [Date],
+         exceptionDates: [String],
          exceptionRules: String,
          timeZoneIdentifier: String?,
          attendees: [MXLCalendarAttendee]) {
