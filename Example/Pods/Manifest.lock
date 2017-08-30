@@ -1,5 +1,5 @@
 PODS:
-  - MXLCalendarManagerSwift (0.1.0)
+  - MXLCalendarManagerSwift (1.0.0)
   - Nimble (5.1.1)
   - Quick (1.0.0)
 
@@ -13,7 +13,7 @@ EXTERNAL SOURCES:
     :path: ../
 
 SPEC CHECKSUMS:
-  MXLCalendarManagerSwift: 9ace72215209166d0d0527aa4c99bf584d772761
+  MXLCalendarManagerSwift: 565e83048fa2a64e915505762b5b51b0817bb0ab
   Nimble: 415e3aa3267e7bc2c96b05fa814ddea7bb686a29
   Quick: 8024e4a47e6cc03a9d5245ef0948264fc6d27cff
 

@@ -1,22 +1,26 @@
 {
   "name": "MXLCalendarManagerSwift",
-  "version": "0.1.0",
-  "summary": "A short description of MXLCalendarManagerSwift.",
-  "description": "TODO: Add long description of the pod here.",
-  "homepage": "https://github.com/ramonstarcut/MXLCalendarManagerSwift",
+  "version": "1.0.0",
+  "summary": "MXLCalendarManagerSwift is a library to parse iCalendar (.ICS) files",
+  "description": "A set of classes used to parse and handle iCalendar (.ICS) files originally implemented in Objective C by Kiran Panesar (https://github.com/KiranPanesar/MXLCalendarManager.git)",
+  "homepage": "https://github.com/ramonvasc/MXLCalendarManagerSwift",
   "license": {
     "type": "MIT",
     "file": "LICENSE"
   },
   "authors": {
-    "ramonstarcut": "ramon.vasconcelos@starcut.com"
+    "Ramon Vasconcelos": "ramonvasc@gmail.com"
   },
   "source": {
-    "git": "https://github.com/ramonstarcut/MXLCalendarManagerSwift.git",
-    "tag": "0.1.0"
+    "git": "https://github.com/ramonvasc/MXLCalendarManagerSwift.git",
+    "tag": "1.0.0"
   },
   "platforms": {
     "ios": "8.0"
   },
-  "source_files": "MXLCalendarManagerSwift/Classes/**/*"
+  "source_files": "MXLCalendarManagerSwift/**/*",
+  "frameworks": [
+    "UIKit",
+    "Foundation"
+  ]
 }
