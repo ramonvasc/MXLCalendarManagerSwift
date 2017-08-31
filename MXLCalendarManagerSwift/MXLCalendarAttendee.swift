@@ -46,7 +46,7 @@ public class MXLCalendarAttendee {
 }
 
 extension MXLCalendarAttendee: Equatable {
-    static func == (lhs: MXLCalendarAttendee, rhs: MXLCalendarAttendee) -> Bool {
+    public static func == (lhs: MXLCalendarAttendee, rhs: MXLCalendarAttendee) -> Bool {
         return lhs.uri == rhs.uri &&
             lhs.commonName == rhs.commonName &&
             lhs.role == rhs.role

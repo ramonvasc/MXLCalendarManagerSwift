@@ -779,7 +779,7 @@ func ==<T: Equatable>(lhs: [T]?, rhs: [T]?) -> Bool {
 }
 
 extension MXLCalendarEvent: Equatable {
-    static func == (lhs: MXLCalendarEvent, rhs: MXLCalendarEvent) -> Bool {
+    public static func == (lhs: MXLCalendarEvent, rhs: MXLCalendarEvent) -> Bool {
         return lhs.dateFormatter == rhs.dateFormatter &&
             lhs.exRuleFrequency == rhs.exRuleFrequency &&
             lhs.exRuleCount == rhs.exRuleCount &&
