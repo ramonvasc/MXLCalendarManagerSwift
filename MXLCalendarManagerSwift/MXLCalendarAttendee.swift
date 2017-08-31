@@ -25,7 +25,7 @@
 
 import Foundation
 
-enum Role: String {
+public enum Role: String {
     case CHAIR
     case REQ_PARTICIPANT
     case OPT_PARTICIPANT
@@ -34,11 +34,11 @@ enum Role: String {
 }
 
 public class MXLCalendarAttendee {
-    var uri: String
-    var commonName: String
-    var role: Role
+    public var uri: String
+    public var commonName: String
+    public var role: Role
 
-    init(withRole role: Role, commonName: String, andUri uri: String) {
+    public init(withRole role: Role, commonName: String, andUri uri: String) {
         self.uri = uri
         self.commonName = commonName
         self.role = role

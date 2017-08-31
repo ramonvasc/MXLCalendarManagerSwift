@@ -31,7 +31,7 @@ import Foundation
 
 public class MXLCalendarManager {
 
-    func scanICSFileAtRemoteURL(fileURL: URL, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
+    public func scanICSFileAtRemoteURL(fileURL: URL, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
         #if os(iOS)
             UIApplication.shared.isNetworkActivityIndicatorVisible = true
         #endif
@@ -60,7 +60,7 @@ public class MXLCalendarManager {
         }
     }
 
-    func scanICSFileatLocalPath(filePath: String, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
+    public func scanICSFileatLocalPath(filePath: String, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
         var calendarFile = String()
         do {
             calendarFile = try String(contentsOfFile: filePath, encoding: .utf8)
@@ -111,7 +111,7 @@ public class MXLCalendarManager {
         return MXLCalendarAttendee(withRole: roleEnum, commonName: comomName, andUri: uri)
     }
 
-    func parse(icsString: String, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
+    public func parse(icsString: String, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
         var regex = NSRegularExpression()
         do {
             regex = try NSRegularExpression(pattern: "\n +", options: .caseInsensitive)

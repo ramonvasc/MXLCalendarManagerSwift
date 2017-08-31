@@ -31,70 +31,70 @@ let WEEKLY_FREQUENCY = "WEEKLY"
 let MONTHLY_FREQUENCY = "MONTHLY"
 let YEARLY_FREQUENCY = "YEARLY"
 
-enum MXLCalendarEventRuleType {
+public enum MXLCalendarEventRuleType {
     case MXLCalendarEventRuleTypeRepetition
     case MXLCalendarEventRuleTypeException
 }
 
 public class MXLCalendarEvent {
-    var dateFormatter: DateFormatter?
+    public var dateFormatter: DateFormatter?
 
-    var exRuleFrequency: String?
-    var exRuleCount: String?
-    var exRuleRuleWkSt: String?
-    var exRuleInterval: String?
-    var exRuleWeekStart: String?
-    var exRuleUntilDate: Date?
+    public var exRuleFrequency: String?
+    public var exRuleCount: String?
+    public var exRuleRuleWkSt: String?
+    public var exRuleInterval: String?
+    public var exRuleWeekStart: String?
+    public var exRuleUntilDate: Date?
 
-    var exRuleBySecond: [String]?
-    var exRuleByMinute: [String]?
-    var exRuleByHour: [String]?
-    var exRuleByDay: [String]?
-    var exRuleByMonthDay: [String]?
-    var exRuleByYearDay: [String]?
-    var exRuleByWeekNo: [String]?
-    var exRuleByMonth: [String]?
-    var exRuleBySetPos: [String]?
+    public var exRuleBySecond: [String]?
+    public var exRuleByMinute: [String]?
+    public var exRuleByHour: [String]?
+    public var exRuleByDay: [String]?
+    public var exRuleByMonthDay: [String]?
+    public var exRuleByYearDay: [String]?
+    public var exRuleByWeekNo: [String]?
+    public var exRuleByMonth: [String]?
+    public var exRuleBySetPos: [String]?
 
-    var repeatRuleFrequency: String?
-    var repeatRuleCount: String?
-    var repeatRuleRuleWkSt: String?
-    var repeatRuleInterval: String?
-    var repeatRuleWeekStart: String?
-    var repeatRuleUntilDate: Date?
+    public var repeatRuleFrequency: String?
+    public var repeatRuleCount: String?
+    public var repeatRuleRuleWkSt: String?
+    public var repeatRuleInterval: String?
+    public var repeatRuleWeekStart: String?
+    public var repeatRuleUntilDate: Date?
 
-    var repeatRuleBySecond: [String]?
-    var repeatRuleByMinute: [String]?
-    var repeatRuleByHour: [String]?
-    var repeatRuleByDay: [String]?
-    var repeatRuleByMonthDay: [String]?
-    var repeatRuleByYearDay: [String]?
-    var repeatRuleByWeekNo: [String]?
-    var repeatRuleByMonth: [String]?
-    var repeatRuleBySetPos: [String]?
+    public var repeatRuleBySecond: [String]?
+    public var repeatRuleByMinute: [String]?
+    public var repeatRuleByHour: [String]?
+    public var repeatRuleByDay: [String]?
+    public var repeatRuleByMonthDay: [String]?
+    public var repeatRuleByYearDay: [String]?
+    public var repeatRuleByWeekNo: [String]?
+    public var repeatRuleByMonth: [String]?
+    public var repeatRuleBySetPos: [String]?
 
-    var eventExceptionDates: [Date]?
+    public var eventExceptionDates: [Date]?
 
-    var calendar: Calendar?
+    public var calendar: Calendar?
 
-    var eventStartDate: Date?
-    var eventEndDate: Date?
-    var eventCreatedDate: Date?
-    var eventLastModifiedDate: Date?
+    public var eventStartDate: Date?
+    public var eventEndDate: Date?
+    public var eventCreatedDate: Date?
+    public var eventLastModifiedDate: Date?
 
-    var eventIsAllDay: Bool?
+    public var eventIsAllDay: Bool?
 
-    var eventUniqueID: String?
-    var eventRecurrenceID: String?
-    var eventSummary: String?
-    var eventDescription: String?
-    var eventLocation: String?
-    var eventStatus: String?
-    var attendees: [MXLCalendarAttendee]?
+    public var eventUniqueID: String?
+    public var eventRecurrenceID: String?
+    public var eventSummary: String?
+    public var eventDescription: String?
+    public var eventLocation: String?
+    public var eventStatus: String?
+    public var attendees: [MXLCalendarAttendee]?
 
-    var rruleString: String?
+    public var rruleString: String?
 
-    init(withStartDate startString: String,
+    public init(withStartDate startString: String,
          endDate endString: String,
          createdAt createdString: String,
          lastModified lastModifiedString: String,
@@ -133,7 +133,7 @@ public class MXLCalendarEvent {
 
     }
 
-    func dateFromString(dateString: String) -> Date? {
+    public func dateFromString(dateString: String) -> Date? {
         var date: Date?
         let dateString = dateString.replacingOccurrences(of: "T", with: " ")
         let containsZone = dateString.range(of: "z", options: .caseInsensitive) != nil
@@ -164,7 +164,7 @@ public class MXLCalendarEvent {
 
     }
 
-    func parseRules(rule: String, forType type: MXLCalendarEventRuleType) {
+    public func parseRules(rule: String, forType type: MXLCalendarEventRuleType) {
         var ruleScanner = Scanner()
 
         let rulesArray = rule.components(separatedBy: ";") // Split up rules string into array
@@ -336,7 +336,7 @@ public class MXLCalendarEvent {
         }
     }
 
-    func check(day: Int, month: Int, year: Int) -> Bool {
+    public func check(day: Int, month: Int, year: Int) -> Bool {
         guard var components = calendar?.dateComponents([.day, .month, .year], from: Date()) else {
             return false
         }
@@ -348,7 +348,7 @@ public class MXLCalendarEvent {
 
     }
 
-    func checkDate(date: Date?) -> Bool {
+    public func checkDate(date: Date?) -> Bool {
         guard let date = date, let eventStartDate = eventStartDate else {
             return false
         }
@@ -544,7 +544,7 @@ public class MXLCalendarEvent {
     }
 
     // This algorith functions the same as check(day, month, year) except rather than checking repeatRule parameters, it checks exRule
-    func exceptionOn(date: Date) -> Bool {
+    public func exceptionOn(date: Date) -> Bool {
         // If the event does not repeat, the 'date' must be the event's start date for event to occur on this date
         if exRuleFrequency == nil {
             return false
@@ -717,7 +717,7 @@ public class MXLCalendarEvent {
         return false
     }
 
-    func convertToEKEventOn(date: Date, store eventStore: EKEventStore) -> EKEvent? {
+    public func convertToEKEventOn(date: Date, store eventStore: EKEventStore) -> EKEvent? {
         guard let eventStartDate = eventStartDate, let eventEndDate = eventEndDate, let eventSummary = eventSummary, let eventIsAllDay = eventIsAllDay else {
             return nil
         }

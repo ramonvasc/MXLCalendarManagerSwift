@@ -26,19 +26,19 @@
 import Foundation
 
 public class MXLCalendar {
-    var daysOfEvents = [String: [MXLCalendarEvent]]()
-    var loadedEvents = [String: Bool]()
+    public var daysOfEvents = [String: [MXLCalendarEvent]]()
+    public var loadedEvents = [String: Bool]()
 
-    var calendar: Calendar?
+    public var calendar: Calendar?
 
-    var timeZone: TimeZone?
-    var events = [MXLCalendarEvent]()
+    public var timeZone: TimeZone?
+    public var events = [MXLCalendarEvent]()
 
-    func add(event: MXLCalendarEvent) {
+    public func add(event: MXLCalendarEvent) {
         events.append(event)
     }
 
-    func add(event: MXLCalendarEvent, onDay day: Int, month: Int, year: Int) {
+    public func add(event: MXLCalendarEvent, onDay day: Int, month: Int, year: Int) {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyddMM"
 
@@ -53,7 +53,7 @@ public class MXLCalendar {
         add(event: event, onDate: formatter.string(from: calendarDate))
     }
 
-    func add(event: MXLCalendarEvent, onDate date: String) {
+    public func add(event: MXLCalendarEvent, onDate date: String) {
         // Check if the event has already been logged today
         guard var dateDaysOfEvents = daysOfEvents[date] else {
             // If there are no current dates on today, create a new array and save it for the day
@@ -76,20 +76,20 @@ public class MXLCalendar {
         }
     }
 
-    func add(event: MXLCalendarEvent, onDate date: Date) {
+    public func add(event: MXLCalendarEvent, onDate date: Date) {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyyddMM"
 
         add(event: event, onDate: dateFormatter.string(from: date))
     }
 
-    func loadedAllEventsForDate(date: Date) {
+    public func loadedAllEventsForDate(date: Date) {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyyddMM"
         loadedEvents[dateFormatter.string(from: date)] = NSNumber(value: true).boolValue
     }
 
-    func hasLoadedAllEventsFor(date: Date) -> Bool {
+    public func hasLoadedAllEventsFor(date: Date) -> Bool {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyyddMM"
         let dateString = dateFormatter.string(from: date)
@@ -99,7 +99,7 @@ public class MXLCalendar {
         return false
     }
 
-    func eventsFor(date: Date) -> [MXLCalendarEvent]? {
+    public func eventsFor(date: Date) -> [MXLCalendarEvent]? {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyyddMM"
 
