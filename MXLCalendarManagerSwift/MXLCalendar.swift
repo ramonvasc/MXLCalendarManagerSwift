@@ -34,6 +34,8 @@ public class MXLCalendar {
     public var timeZone: TimeZone?
     public var events = [MXLCalendarEvent]()
 
+    public init() {}
+
     public func add(event: MXLCalendarEvent) {
         events.append(event)
     }

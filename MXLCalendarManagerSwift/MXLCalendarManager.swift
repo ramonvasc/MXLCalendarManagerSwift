@@ -31,6 +31,8 @@ import Foundation
 
 public class MXLCalendarManager {
 
+    public init() {}
+
     public func scanICSFileAtRemoteURL(fileURL: URL, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
         #if os(iOS)
             UIApplication.shared.isNetworkActivityIndicatorVisible = true
