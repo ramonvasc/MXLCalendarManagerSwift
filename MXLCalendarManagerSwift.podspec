@@ -1,11 +1,3 @@
-#
-# Be sure to run `pod lib lint MXLCalendarManagerSwift.podspec' to ensure this is a
-# valid spec before submitting.
-#
-# Any lines starting with a # are optional, but their use is encouraged
-# To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html
-#
-
 Pod::Spec.new do |s|
   s.name             = 'MXLCalendarManagerSwift'
   s.version          = '1.0.0'
@@ -20,6 +12,6 @@ Pod::Spec.new do |s|
 
   s.ios.deployment_target = '8.0'
 
-  s.source_files = 'MXLCalendarManagerSwift/**/*'
+  s.source_files = 'MXLCalendarManagerSwift/*'
   s.frameworks = 'UIKit', 'Foundation'
 end
