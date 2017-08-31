@@ -1,6 +1,6 @@
 //
 //  MXLCalendarAttendee.swift
-//  
+//  Pods
 //
 //  Created by Ramon Vasconcelos on 22/08/2017.
 //
@@ -33,7 +33,7 @@ enum Role: String {
 
 }
 
-class MXLCalendarAttendee {
+public class MXLCalendarAttendee {
     var uri: String
     var commonName: String
     var role: Role

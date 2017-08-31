@@ -29,7 +29,7 @@ import Foundation
     import UIKit
 #endif
 
-class MXLCalendarManager {
+public class MXLCalendarManager {
 
     func scanICSFileAtRemoteURL(fileURL: URL, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
         #if os(iOS)

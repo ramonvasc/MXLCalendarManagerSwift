@@ -25,7 +25,7 @@
 
 import Foundation
 
-extension TimeZone {
+public extension TimeZone {
     var properAbbreviation: String? {
         if abbreviation() == "GMT" || abbreviation() == "BST" {
             return abbreviation()

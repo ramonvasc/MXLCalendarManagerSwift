@@ -36,7 +36,7 @@ enum MXLCalendarEventRuleType {
     case MXLCalendarEventRuleTypeException
 }
 
-class MXLCalendarEvent {
+public class MXLCalendarEvent {
     var dateFormatter: DateFormatter?
 
     var exRuleFrequency: String?

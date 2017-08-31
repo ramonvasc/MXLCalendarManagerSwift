@@ -25,7 +25,7 @@
 
 import Foundation
 
-class MXLCalendar {
+public class MXLCalendar {
     var daysOfEvents = [String: [MXLCalendarEvent]]()
     var loadedEvents = [String: Bool]()
 
