@@ -7,14 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		16960E38420C1D3EC8715E4A /* Pods_MXLCalendarManagerSwift_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43A1A58C7B3CF95752BB61AC /* Pods_MXLCalendarManagerSwift_Tests.framework */; };
+		2838E90A6795CF0BF5D765AF /* Pods_MXLCalendarManagerSwift_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 19639AD3BAB6E5979F79EFF5 /* Pods_MXLCalendarManagerSwift_Example.framework */; };
+		5C5945877961EEB4BDBEFF77 /* Pods_MXLCalendarManagerSwift_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1B2122AC76447D8F65095002 /* Pods_MXLCalendarManagerSwift_Tests.framework */; };
 		607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD51AFB9204008FA782 /* AppDelegate.swift */; };
 		607FACD81AFB9204008FA782 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD71AFB9204008FA782 /* ViewController.swift */; };
 		607FACDB1AFB9204008FA782 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 607FACD91AFB9204008FA782 /* Main.storyboard */; };
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
 		607FACEC1AFB9204008FA782 /* Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACEB1AFB9204008FA782 /* Tests.swift */; };
-		91131E121AF8A7CB956C74F9 /* Pods_MXLCalendarManagerSwift_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B8CDE63F6B3E6D7940D023F /* Pods_MXLCalendarManagerSwift_Example.framework */; };
+		F6564C791F5D40F00049ABC2 /* basic.ics in Resources */ = {isa = PBXBuildFile; fileRef = F6564C781F5D40F00049ABC2 /* basic.ics */; };
+		F667BFBE1F56DB5100F70E6B /* MXLCalendarManagerSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F667BFBD1F56DB5100F70E6B /* MXLCalendarManagerSwift.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,7 +31,8 @@
 
 /* Begin PBXFileReference section */
 		16B7842C982FFE23CE2199E7 /* Pods-MXLCalendarManagerSwift_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MXLCalendarManagerSwift_Tests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MXLCalendarManagerSwift_Tests/Pods-MXLCalendarManagerSwift_Tests.debug.xcconfig"; sourceTree = "<group>"; };
-		43A1A58C7B3CF95752BB61AC /* Pods_MXLCalendarManagerSwift_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MXLCalendarManagerSwift_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		19639AD3BAB6E5979F79EFF5 /* Pods_MXLCalendarManagerSwift_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MXLCalendarManagerSwift_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		1B2122AC76447D8F65095002 /* Pods_MXLCalendarManagerSwift_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MXLCalendarManagerSwift_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		607FACD01AFB9204008FA782 /* MXLCalendarManagerSwift_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MXLCalendarManagerSwift_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		607FACD41AFB9204008FA782 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		607FACD51AFB9204008FA782 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -43,10 +46,11 @@
 		673841AC901522125E6C2D03 /* MXLCalendarManagerSwift.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = MXLCalendarManagerSwift.podspec; path = ../MXLCalendarManagerSwift.podspec; sourceTree = "<group>"; };
 		7116CE35DEDA63217F3B26AA /* Pods-MXLCalendarManagerSwift_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MXLCalendarManagerSwift_Tests.release.xcconfig"; path = "Pods/Target Support Files/Pods-MXLCalendarManagerSwift_Tests/Pods-MXLCalendarManagerSwift_Tests.release.xcconfig"; sourceTree = "<group>"; };
 		8266A444D0AE9C0F5BE897A8 /* Pods-MXLCalendarManagerSwift_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MXLCalendarManagerSwift_Example.release.xcconfig"; path = "Pods/Target Support Files/Pods-MXLCalendarManagerSwift_Example/Pods-MXLCalendarManagerSwift_Example.release.xcconfig"; sourceTree = "<group>"; };
-		8B8CDE63F6B3E6D7940D023F /* Pods_MXLCalendarManagerSwift_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MXLCalendarManagerSwift_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A15C8C8D52AE5B8F4D52B86D /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
 		DBD9AB55F53519EC85AC0773 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		DC9D029942756C48EBD9D68C /* Pods-MXLCalendarManagerSwift_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MXLCalendarManagerSwift_Example.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MXLCalendarManagerSwift_Example/Pods-MXLCalendarManagerSwift_Example.debug.xcconfig"; sourceTree = "<group>"; };
+		F6564C781F5D40F00049ABC2 /* basic.ics */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = basic.ics; sourceTree = "<group>"; };
+		F667BFBD1F56DB5100F70E6B /* MXLCalendarManagerSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MXLCalendarManagerSwift.framework; path = "../../../Library/Developer/Xcode/DerivedData/MXLCalendarManagerSwift-cbkdcbgphlkeqgcnsyxqyndogaad/Build/Products/Debug-iphonesimulator/MXLCalendarManagerSwift/MXLCalendarManagerSwift.framework"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,7 +58,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				91131E121AF8A7CB956C74F9 /* Pods_MXLCalendarManagerSwift_Example.framework in Frameworks */,
+				F667BFBE1F56DB5100F70E6B /* MXLCalendarManagerSwift.framework in Frameworks */,
+				2838E90A6795CF0BF5D765AF /* Pods_MXLCalendarManagerSwift_Example.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -62,7 +67,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				16960E38420C1D3EC8715E4A /* Pods_MXLCalendarManagerSwift_Tests.framework in Frameworks */,
+				5C5945877961EEB4BDBEFF77 /* Pods_MXLCalendarManagerSwift_Tests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -93,6 +98,7 @@
 		607FACD21AFB9204008FA782 /* Example for MXLCalendarManagerSwift */ = {
 			isa = PBXGroup;
 			children = (
+				F6564C781F5D40F00049ABC2 /* basic.ics */,
 				607FACD51AFB9204008FA782 /* AppDelegate.swift */,
 				607FACD71AFB9204008FA782 /* ViewController.swift */,
 				607FACD91AFB9204008FA782 /* Main.storyboard */,
@@ -153,8 +159,9 @@
 		FD31E4B71F02F3EF34DA0461 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				8B8CDE63F6B3E6D7940D023F /* Pods_MXLCalendarManagerSwift_Example.framework */,
-				43A1A58C7B3CF95752BB61AC /* Pods_MXLCalendarManagerSwift_Tests.framework */,
+				F667BFBD1F56DB5100F70E6B /* MXLCalendarManagerSwift.framework */,
+				19639AD3BAB6E5979F79EFF5 /* Pods_MXLCalendarManagerSwift_Example.framework */,
+				1B2122AC76447D8F65095002 /* Pods_MXLCalendarManagerSwift_Tests.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -248,6 +255,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F6564C791F5D40F00049ABC2 /* basic.ics in Resources */,
 				607FACDB1AFB9204008FA782 /* Main.storyboard in Resources */,
 				607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */,
 				607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */,

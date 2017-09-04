@@ -1,12 +1,13 @@
 use_frameworks!
+platform :ios, '8.3'
 
 target 'MXLCalendarManagerSwift_Example' do
-  pod 'MXLCalendarManagerSwift', :path => '../'
+  pod 'MXLCalendarManagerSwift', :git => 'https://github.com/ramonvasc/MXLCalendarManagerSwift.git'
 
   target 'MXLCalendarManagerSwift_Tests' do
     inherit! :search_paths
 
     pod 'Quick', '~> 1.0.0'
-  pod 'Nimble', '~> 5.1.1'
+    pod 'Nimble', '~> 5.1.1'
   end
 end

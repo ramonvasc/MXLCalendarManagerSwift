@@ -18,7 +18,7 @@
   "platforms": {
     "ios": "8.0"
   },
-  "source_files": "MXLCalendarManagerSwift/**/*",
+  "source_files": "MXLCalendarManagerSwift/*",
   "frameworks": [
     "UIKit",
     "Foundation"
