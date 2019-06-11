@@ -780,9 +780,7 @@ func ==<T: Equatable>(lhs: [T]?, rhs: [T]?) -> Bool {
 
 extension MXLCalendarEvent: Equatable {
     public static func == (lhs: MXLCalendarEvent, rhs: MXLCalendarEvent) -> Bool {
-        return lhs.dateFormatter == rhs.dateFormatter &&
-            lhs.exRuleFrequency == rhs.exRuleFrequency &&
-            lhs.exRuleCount == rhs.exRuleCount &&
+        let exRuleCheck = lhs.exRuleCount == rhs.exRuleCount &&
             lhs.exRuleRuleWkSt == rhs.exRuleRuleWkSt &&
             lhs.exRuleInterval == rhs.exRuleInterval &&
             lhs.exRuleWeekStart == rhs.exRuleWeekStart &&
@@ -795,8 +793,9 @@ extension MXLCalendarEvent: Equatable {
             lhs.exRuleByYearDay == rhs.exRuleByYearDay &&
             lhs.exRuleByWeekNo == rhs.exRuleByWeekNo &&
             lhs.exRuleByMonth == rhs.exRuleByMonth &&
-            lhs.exRuleBySetPos == rhs.exRuleBySetPos &&
-            lhs.repeatRuleFrequency == rhs.repeatRuleFrequency &&
+            lhs.exRuleBySetPos == rhs.exRuleBySetPos
+        
+        let repeatRuleCheck = lhs.repeatRuleFrequency == rhs.repeatRuleFrequency &&
             lhs.repeatRuleCount == rhs.repeatRuleCount &&
             lhs.repeatRuleRuleWkSt == rhs.repeatRuleRuleWkSt &&
             lhs.repeatRuleInterval == rhs.repeatRuleInterval &&
@@ -810,8 +809,9 @@ extension MXLCalendarEvent: Equatable {
             lhs.repeatRuleByYearDay == rhs.repeatRuleByYearDay &&
             lhs.repeatRuleByWeekNo == rhs.repeatRuleByWeekNo &&
             lhs.repeatRuleByMonth == rhs.repeatRuleByMonth &&
-            lhs.repeatRuleBySetPos == rhs.repeatRuleBySetPos &&
-            lhs.eventExceptionDates == rhs.eventExceptionDates &&
+            lhs.repeatRuleBySetPos == rhs.repeatRuleBySetPos
+        
+        let eventCheck = lhs.dateFormatter == rhs.dateFormatter &&
             lhs.calendar == rhs.calendar &&
             lhs.eventStartDate == rhs.eventStartDate &&
             lhs.eventEndDate == rhs.eventEndDate &&
@@ -825,5 +825,7 @@ extension MXLCalendarEvent: Equatable {
             lhs.eventLocation == rhs.eventStatus &&
             lhs.attendees == rhs.attendees &&
             lhs.rruleString == rhs.rruleString
+        
+        return exRuleCheck && repeatRuleCheck && eventCheck
     }
 }

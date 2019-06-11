@@ -186,7 +186,7 @@ public class MXLCalendarManager {
             timezoneIDString = String(timezoneIDStringPointer ?? "")
             timezoneIDString = timezoneIDString.replacingOccurrences(of: "DTSTART;TZID=", with: "").replacingOccurrences(of: "\n", with: "")
 
-            if timezoneIDString == "" {
+            if timezoneIDString.isEmpty {
                 // Extract event time zone ID
                 eventScanner = Scanner(string: event)
                 eventScanner.scanUpTo("TZID:", into: nil)
@@ -202,14 +202,14 @@ public class MXLCalendarManager {
             startDateTimeString = String(startDateTimeStringPointer ?? "")
             startDateTimeString = startDateTimeString.replacingOccurrences(of: String(format: "DTSTART;TZID=%@:", timezoneIDString), with: "").replacingOccurrences(of: "\r", with: "")
 
-            if startDateTimeString == "" {
+            if startDateTimeString.isEmpty {
                 eventScanner = Scanner(string: event)
                 eventScanner.scanUpTo("DTSTART:", into: nil)
                 eventScanner.scanUpTo("\n", into: &startDateTimeStringPointer)
                 startDateTimeString = String(startDateTimeStringPointer ?? "")
                 startDateTimeString = startDateTimeString.replacingOccurrences(of: "DTSTART:", with: "").replacingOccurrences(of: "\r", with: "")
 
-                if startDateTimeString == "" {
+                if startDateTimeString.isEmpty {
                     eventScanner = Scanner(string: event)
                     eventScanner.scanUpTo("DTSTART;VALUE=DATE:", into: nil)
                     eventScanner.scanUpTo("\n", into: &startDateTimeStringPointer)
@@ -225,14 +225,14 @@ public class MXLCalendarManager {
             endDateTimeString = String(endDateTimeStringPointer ?? "")
             endDateTimeString = endDateTimeString.replacingOccurrences(of: String(format: "DTEND;TZID=%@:", timezoneIDString), with: "").replacingOccurrences(of: "\r", with: "")
 
-            if startDateTimeString == "" {
+            if endDateTimeString.isEmpty {
                 eventScanner = Scanner(string: event)
                 eventScanner.scanUpTo("DTEND:", into: nil)
                 eventScanner.scanUpTo("\n", into: &endDateTimeStringPointer)
                 endDateTimeString = String(endDateTimeStringPointer ?? "")
                 endDateTimeString = endDateTimeString.replacingOccurrences(of: "DTEND:", with: "").replacingOccurrences(of: "\r", with: "")
 
-                if startDateTimeString == "" {
+                if endDateTimeString.isEmpty {
                     eventScanner = Scanner(string: event)
                     eventScanner.scanUpTo("DTEND;VALUE=DATE:", into: nil)
                     eventScanner.scanUpTo("\n", into: &endDateTimeStringPointer)
@@ -264,7 +264,7 @@ public class MXLCalendarManager {
                 if eventScanner.scanUpTo("ATTENDEE;", into: nil) {
                     scannerStatus = eventScanner.scanUpTo("\n", into: &attendeeStringPointer)
                     attendeeString = String(attendeeStringPointer ?? "")
-                    if scannerStatus, attendeeString != "" {
+                    if scannerStatus, !attendeeString.isEmpty {
                         attendeeString = attendeeString.replacingOccurrences(of: "ATTENDEE;", with: "").replacingOccurrences(of: "\r", with: "")
                         if let attendee = createAttendee(string: attendeeString) {
                             attendees.append(attendee)
@@ -364,7 +364,7 @@ public class MXLCalendarManager {
                 exceptionString = String(exceptionStringPointer ?? "")
                 exceptionString = exceptionString.replacingOccurrences(of: ":", with: "").replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "")
 
-                if exceptionString != "" {
+                if !exceptionString.isEmpty {
                     exceptionDates.append(exceptionString)
                 }
 

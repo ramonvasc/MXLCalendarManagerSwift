@@ -4,13 +4,20 @@ import Foundation
     A closure that, when evaluated, returns a dictionary of key-value
     pairs that can be accessed from within a group of shared examples.
 */
-public typealias SharedExampleContext = () -> (NSDictionary)
+public typealias SharedExampleContext = () -> [String: Any]
 
 /**
     A closure that is used to define a group of shared examples. This
     closure may contain any number of example and example groups.
 */
-public typealias SharedExampleClosure = (@escaping SharedExampleContext) -> ()
+public typealias SharedExampleClosure = (@escaping SharedExampleContext) -> Void
+
+#if canImport(Darwin) && !SWIFT_PACKAGE
+@objcMembers
+internal class _WorldBase: NSObject {}
+#else
+internal class _WorldBase: NSObject {}
+#endif
 
 /**
     A collection of state Quick builds up in order to work its magic.
@@ -23,7 +30,7 @@ public typealias SharedExampleClosure = (@escaping SharedExampleContext) -> ()
     You may configure how Quick behaves by calling the -[World configure:]
     method from within an overridden +[QuickConfiguration configure:] method.
 */
-final internal class World: NSObject {
+final internal class World: _WorldBase {
     /**
         The example group that is currently being run.
         The DSL requires that this group is correctly set in order to build a
@@ -44,7 +51,7 @@ final internal class World: NSObject {
         within this test suite. This is only true within the context of Quick
         functional tests.
     */
-#if _runtime(_ObjC)
+#if canImport(Darwin)
     // Convention of generating Objective-C selector has been changed on Swift 3
     @objc(isRunningAdditionalSuites)
     internal var isRunningAdditionalSuites = false
@@ -52,10 +59,11 @@ final internal class World: NSObject {
     internal var isRunningAdditionalSuites = false
 #endif
 
-    private var specs: Dictionary<String, ExampleGroup> = [:]
+    private var specs: [String: ExampleGroup] = [:]
     private var sharedExamples: [String: SharedExampleClosure] = [:]
     private let configuration = Configuration()
-    private var isConfigurationFinalized = false
+
+    internal private(set) var isConfigurationFinalized = false
 
     internal var exampleHooks: ExampleHooks {return configuration.exampleHooks }
     internal var suiteHooks: SuiteHooks { return configuration.suiteHooks }
@@ -63,6 +71,7 @@ final internal class World: NSObject {
     // MARK: Singleton Constructor
 
     private override init() {}
+
     static let sharedWorld = World()
 
     // MARK: Public Interface
@@ -143,9 +152,9 @@ final internal class World: NSObject {
         }
     }
 
-#if _runtime(_ObjC)
+#if canImport(Darwin)
     @objc(examplesForSpecClass:)
-    private func objc_examples(_ specClass: AnyClass) -> [Example] {
+    internal func objc_examples(_ specClass: AnyClass) -> [Example] {
         return examples(specClass)
     }
 #endif
