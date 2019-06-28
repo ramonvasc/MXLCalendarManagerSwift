@@ -37,7 +37,7 @@ public enum MXLCalendarEventRuleType {
 }
 
 public class MXLCalendarEvent {
-    public var dateFormatter: DateFormatter?
+    public var dateFormatter: DateFormatter
 
     public var exRuleFrequency: String?
     public var exRuleCount: String?
@@ -73,7 +73,7 @@ public class MXLCalendarEvent {
     public var repeatRuleByMonth: [String]?
     public var repeatRuleBySetPos: [String]?
 
-    public var eventExceptionDates: [Date]?
+    public var eventExceptionDates: [Date] = [Date]()
 
     public var calendar: Calendar?
 
@@ -107,16 +107,21 @@ public class MXLCalendarEvent {
          recurrenceRules: String,
          exceptionDates: [String],
          exceptionRules: String,
-         timeZoneIdentifier: String?,
+         timeZoneIdentifier: String,
          attendees: [MXLCalendarAttendee]) {
         self.calendar = Calendar(identifier: .gregorian)
         self.dateFormatter = DateFormatter()
-        self.dateFormatter?.timeZone = TimeZone(identifier: timeZoneIdentifier ?? TimeZone.current.identifier)
-        self.dateFormatter?.dateFormat = "yyyyMMdd HHmmss"
+        self.dateFormatter.timeZone = TimeZone(identifier: timeZoneIdentifier.isEmpty ? "GMT" : timeZoneIdentifier)
+        calendar?.timeZone = dateFormatter.timeZone
+        self.dateFormatter.dateFormat = "yyyyMMdd HHmmss"
         self.eventStartDate = dateFromString(dateString: startString)
         self.eventEndDate = dateFromString(dateString: endString)
         self.eventCreatedDate = dateFromString(dateString: createdString)
         self.eventLastModifiedDate = dateFromString(dateString: lastModifiedString)
+        self.eventExceptionDates = exceptionDates
+            .compactMap({ (exceptionDateString) -> Date? in
+                return self.dateFromString(dateString: exceptionDateString)
+            })
 
         self.rruleString = recurrenceRules
 
@@ -139,26 +144,26 @@ public class MXLCalendarEvent {
         let containsZone = dateString.range(of: "z", options: .caseInsensitive) != nil
 
         if containsZone {
-            dateFormatter?.dateFormat = "yyyyMMdd HHmmssz"
+            dateFormatter.dateFormat = "yyyyMMdd HHmmssz"
         }
 
-        date = dateFormatter?.date(from: dateString)
+        date = dateFormatter.date(from: dateString)
 
         if date == nil {
             if containsZone {
-                dateFormatter?.dateFormat = "yyyyMMddz"
+                dateFormatter.dateFormat = "yyyyMMddz"
             } else {
-                dateFormatter?.dateFormat = "yyyyMMdd"
+                dateFormatter.dateFormat = "yyyyMMdd"
             }
 
-            date = dateFormatter?.date(from: dateString)
+            date = dateFormatter.date(from: dateString)
 
             if date != nil {
                 eventIsAllDay = true
             }
         }
 
-        dateFormatter?.dateFormat = "yyyyMMdd HHmmss"
+        dateFormatter.dateFormat = "yyyyMMdd HHmmss"
 
         return date
 
@@ -307,7 +312,7 @@ public class MXLCalendarEvent {
             }
 
             // If the rule is BYMONTH
-            if rule.range(of: "BYMONTH") != nil {
+            if rule.range(of: "BYMONTH=") != nil {
                 ruleScanner.scanUpTo("=", into: nil)
                 ruleScanner.scanUpTo(";", into: &byMonthPointer)
                 byMonth = String(byMonthPointer ?? "")
@@ -349,12 +354,12 @@ public class MXLCalendarEvent {
     }
 
     public func checkDate(date: Date?) -> Bool {
-        guard let date = date, let eventStartDate = eventStartDate else {
+        guard let date = date, let eventStartDate = eventStartDate, let eventEndDate = eventEndDate else {
             return false
         }
 
         // If the event starts in the future
-        if eventStartDate.compare(Date()) == .orderedDescending {
+        if eventStartDate.compare(date) == .orderedDescending {
             return false
         }
 
@@ -372,19 +377,19 @@ public class MXLCalendarEvent {
             }
         }
 
-        // If the date is in the event's exception dates, event won't occur
-        if let eventExceptionDates = eventExceptionDates, eventExceptionDates.contains(date) {
+        guard let calendar = calendar else {
             return false
         }
 
-        guard let calendar = calendar else {
+        // If the date is in the event's exception dates, event won't occur
+        if eventExceptionDates.contains(where: { calendar.isDate(date, inSameDayAs: $0) }) {
             return false
         }
 
         // Extract the components from the provided date
         let components = calendar.dateComponents([.day, .weekOfYear, .month, .year, .weekday], from: date)
 
-        guard let day = components.day, let month = components.month, let weekday = components.weekday, let weekOfYear = components.weekOfYear, let dayOfYear = calendar.ordinality(of: .day, in: .year, for: date), let eventCreatedDate = eventCreatedDate else {
+        guard let day = components.day, let month = components.month, let weekday = components.weekday, let weekOfYear = components.weekOfYear, let dayOfYear = calendar.ordinality(of: .day, in: .year, for: date) else {
             return false
         }
 
@@ -431,12 +436,13 @@ public class MXLCalendarEvent {
             // Is there a limit on the number of repetitions
             // (e.g., event repeats for the 3 occurrences after it first occurred)
             if let repeatRuleCount = repeatRuleCount, let repeatRuleCountInt = Int(repeatRuleCount) {
-                // Get the final possible time the event will be repeated
+                // Get the number of weeks from the first occurrence until the last one, then multiply by 7 days a week
+                let daysUntilLastOccurrence = (repeatRuleCountInt - 1) * repeatRuleIntervalInt * 7
                 var comp = DateComponents()
-                comp.day = repeatRuleCountInt * repeatRuleIntervalInt
+                comp.day = daysUntilLastOccurrence
 
-                // Create a date by adding the final week it'll occur onto the first occurrence
-                guard let maximumDate = calendar.date(byAdding: comp, to: eventCreatedDate) else {
+                // Create a date by adding the number of days until the final occurrence onto the first occurrence
+                guard let maximumDate = calendar.date(byAdding: comp, to: eventEndDate) else {
                     return false
                 }
 
@@ -464,7 +470,7 @@ public class MXLCalendarEvent {
                 } else {
                     return false
                 }
-            } else if let difference = calendar.dateComponents([.day], from: eventCreatedDate, to: date).day {
+            } else if let difference = calendar.dateComponents([.day], from: eventStartDate, to: date).day {
                 if difference % repeatRuleIntervalInt != 0 {
                     return false
                 } else {
@@ -473,12 +479,12 @@ public class MXLCalendarEvent {
             }
         } else if repeatRuleFrequency == MONTHLY_FREQUENCY {
             if let repeatRuleCount = repeatRuleCount, let repeatRuleCountInt = Int(repeatRuleCount) {
-                let finalMonth = repeatRuleCountInt * repeatRuleIntervalInt
+                let monthsUntilLastOccurrence = (repeatRuleCountInt - 1) * repeatRuleIntervalInt
 
                 var comp = DateComponents()
-                comp.month = finalMonth
+                comp.month = monthsUntilLastOccurrence
 
-                let maximumDate = calendar.date(byAdding: comp, to: eventCreatedDate)
+                let maximumDate = calendar.date(byAdding: comp, to: eventEndDate)
                 if maximumDate?.compare(date) == .orderedDescending || maximumDate?.compare(date) == .orderedSame, let calendarDate = calendar.date(from: comp), let difference = calendar.dateComponents([.month], from: calendarDate, to: date).month {
                     if difference % repeatRuleIntervalInt != 0 {
                         return false
@@ -499,7 +505,7 @@ public class MXLCalendarEvent {
                     return false
                 }
             } else {
-                if let difference = calendar.dateComponents([.day], from: eventCreatedDate, to: date).month, difference % repeatRuleIntervalInt != 0 {
+                if let difference = calendar.dateComponents([.day], from: eventStartDate, to: date).month, difference % repeatRuleIntervalInt != 0 {
                     return false
                 } else {
                     return true
@@ -507,11 +513,11 @@ public class MXLCalendarEvent {
             }
         } else if repeatRuleFrequency == YEARLY_FREQUENCY {
             if let repeatRuleCount = repeatRuleCount, let repeatRuleCountInt = Int(repeatRuleCount) {
-                let finalYear = repeatRuleCountInt * repeatRuleIntervalInt
+                let yearsUntilLastOccurrence = (repeatRuleCountInt - 1) * repeatRuleIntervalInt
                 var comp = DateComponents()
-                comp.year = finalYear
+                comp.year = yearsUntilLastOccurrence
 
-                let maximumDate = calendar.date(byAdding: comp, to: eventCreatedDate)
+                let maximumDate = calendar.date(byAdding: comp, to: eventEndDate)
 
                 if maximumDate?.compare(date) == .orderedDescending || maximumDate?.compare(date) == .orderedSame, let calendarDate = calendar.date(from: comp), let difference = calendar.dateComponents([.year], from:calendarDate, to: date).year {
                     if difference % repeatRuleIntervalInt != 0 {
@@ -520,14 +526,18 @@ public class MXLCalendarEvent {
                         return true
                     }
                 }
-            } else if let repeatRuleUntilDate = repeatRuleUntilDate, let difference = calendar.dateComponents([.year], from: repeatRuleUntilDate, to: date).year {
-                if difference % repeatRuleIntervalInt != 0 {
-                    return false
+            } else if let repeatRuleUntilDate = repeatRuleUntilDate {
+                if repeatRuleUntilDate.compare(date) == .orderedDescending || repeatRuleUntilDate.compare(date) == .orderedSame, let difference = calendar.dateComponents([.year], from: repeatRuleUntilDate, to: date).year {
+                    if difference % repeatRuleIntervalInt != 0 {
+                        return false
+                    } else {
+                        return true
+                    }
                 } else {
-                    return true
+                    return false
                 }
             } else {
-                if let difference = calendar.dateComponents([.year], from: eventCreatedDate, to: date).year {
+                if let difference = calendar.dateComponents([.year], from: eventStartDate, to: date).year {
                     if difference % repeatRuleIntervalInt != 0 {
                         return false
                     } else {
@@ -551,7 +561,7 @@ public class MXLCalendarEvent {
         }
 
         // If the date is in the event's exception dates, event won't occur
-        if let eventExceptionDates = eventExceptionDates, eventExceptionDates.contains(date) {
+        if eventExceptionDates.contains(date) {
             return false
         }
 
@@ -597,7 +607,7 @@ public class MXLCalendarEvent {
 
         exRuleInterval = exRuleInterval ?? "1"
 
-        guard let exRuleInterval = exRuleInterval, let exRuleIntervalInt = Int(exRuleInterval) else {
+        guard let exRuleInterval = exRuleInterval, let exRuleIntervalInt = Int(exRuleInterval), let eventEndDate = eventEndDate else {
             return false
         }
 
@@ -611,7 +621,7 @@ public class MXLCalendarEvent {
                 comp.day = exRuleCountInt * exRuleIntervalInt
 
                 // Create a date by adding the final week it'll occur onto the first occurrence
-                guard let maximumDate = calendar.date(byAdding: comp, to: eventCreatedDate) else {
+                guard let maximumDate = calendar.date(byAdding: comp, to: eventEndDate) else {
                     return false
                 }
 
@@ -653,7 +663,7 @@ public class MXLCalendarEvent {
                 var comp = DateComponents()
                 comp.month = finalMonth
 
-                let maximumDate = calendar.date(byAdding: comp, to: eventCreatedDate)
+                let maximumDate = calendar.date(byAdding: comp, to: eventEndDate)
                 if maximumDate?.compare(date) == .orderedDescending || maximumDate?.compare(date) == .orderedSame, let calendarDate = calendar.date(from: comp), let difference = calendar.dateComponents([.month], from: calendarDate, to: date).month {
                     if difference % exRuleIntervalInt != 0 {
                         return false
@@ -686,7 +696,7 @@ public class MXLCalendarEvent {
                 var comp = DateComponents()
                 comp.year = finalYear
 
-                let maximumDate = calendar.date(byAdding: comp, to: eventCreatedDate)
+                let maximumDate = calendar.date(byAdding: comp, to: eventEndDate)
 
                 if maximumDate?.compare(date) == .orderedDescending || maximumDate?.compare(date) == .orderedSame, let calendarDate = calendar.date(from: comp), let difference = calendar.dateComponents([.year], from:calendarDate, to: date).year {
                     if difference % exRuleIntervalInt != 0 {
@@ -744,7 +754,60 @@ public class MXLCalendarEvent {
 
         return event
     }
+    
+    public func checkTime(targetTime: Date) -> Bool {
+        guard let firstStartTime = eventStartDate, let firstEndTime = eventEndDate else { return false }
+        
+        if repeatRuleFrequency == nil {
+            return dateWithinRange(date: targetTime, start: firstStartTime, end: firstEndTime)
+        } else {
+            guard let calendar = calendar else {
+                return false
+            }
+            
+            // check if there's an occurrence that starts on the same day as targetTime
+            if checkDate(date: targetTime) {
 
+                // now check if targetTime is actually inside that occurrence
+                
+                // number of years, months, days, between firstStart's date and targetTimes's date
+                let daysSinceFirstStart = calendar.dateComponents([.year, .month, .day], from: firstStartTime, to: targetTime)
+                // add to firstStart and firstEnd the computed number of years, months, days, to get start and end times of the target occurrence
+                if let targetStartTime = calendar.date(byAdding: daysSinceFirstStart, to: firstStartTime),
+                    let targetEndTime = calendar.date(byAdding: daysSinceFirstStart, to: firstEndTime),
+                    dateWithinRange(date: targetTime, start: targetStartTime, end: targetEndTime) {
+                    
+                    return true
+                }
+            } else {
+                // check if there's an occurrence that starts the day before targetTime.
+                let startOfTargetDay = calendar.startOfDay(for: targetTime)
+                let nightBeforeTargetTime = startOfTargetDay.addingTimeInterval(-1)
+                if checkDate(date: nightBeforeTargetTime) {
+                    // now check if targetTime is actually inside that occurrence, this time by using number of years, months, days, since firstEnd's date
+                    let daysSinceFirstEnd = calendar.dateComponents([.year, .month, .day], from: firstEndTime, to: targetTime)
+                    if let targetStartTime = calendar.date(byAdding: daysSinceFirstEnd, to: firstStartTime),
+                        let targetEndTime = calendar.date(byAdding: daysSinceFirstEnd, to: firstEndTime),
+                        dateWithinRange(date: targetTime, start: targetStartTime, end: targetEndTime),
+                        dateWithinRange(date: nightBeforeTargetTime, start: targetStartTime, end: targetEndTime) {
+                        
+                        return true
+                    }
+                }
+            }
+            
+            // KNOWN LIMITATION: this only works for events that span across at most 2 days
+            return false
+        }
+    }
+
+    private func dateWithinRange(date: Date, start: Date, end: Date) -> Bool {
+        guard start < end else { return false }
+        
+        let range = start ... end
+        return range.contains(date)
+    }
+    
     private func dayOfWeekFromInteger(day: Int) -> String {
         switch day {
         case 1:
