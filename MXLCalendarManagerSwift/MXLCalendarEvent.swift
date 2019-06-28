@@ -477,6 +477,49 @@ public class MXLCalendarEvent {
                     return true
                 }
             }
+        } else if repeatRuleFrequency == DAILY_FREQUENCY {
+            if let repeatRuleCount = repeatRuleCount, let repeatRuleCountInt = Int(repeatRuleCount) {
+                // Get the number of days from the first occurrence until the last one
+                let daysUntilLastOccurrence = (repeatRuleCountInt - 1) * repeatRuleIntervalInt
+                var comp = DateComponents()
+                comp.day = daysUntilLastOccurrence
+                
+                // Create a date by adding the number of days until the final occurrence onto the first occurrence
+                guard let maximumDate = calendar.date(byAdding: comp, to: eventEndDate) else {
+                    return false
+                }
+                
+                // If the final possible occurrence is in the future...
+                if maximumDate.compare(date) == .orderedDescending || maximumDate.compare(date) == .orderedSame {
+                    // Get the number of weeks between the final date and current date
+                    
+                    if let difference = calendar.dateComponents([.day], from: maximumDate, to: date).day {
+                        if difference % repeatRuleIntervalInt != 0 {
+                            return false
+                        } else {
+                            return true
+                        }
+                    }
+                } else {
+                    return false
+                }
+            } else if let repeatRuleUntilDate = repeatRuleUntilDate {
+                if repeatRuleUntilDate.compare(date) == .orderedDescending || repeatRuleUntilDate.compare(date) == .orderedSame, let difference = calendar.dateComponents([.day], from: repeatRuleUntilDate, to: date).day {
+                    if difference % repeatRuleIntervalInt != 0 {
+                        return false
+                    } else {
+                        return true
+                    }
+                } else {
+                    return false
+                }
+            } else if let difference = calendar.dateComponents([.day], from: eventStartDate, to: date).day {
+                if difference % repeatRuleIntervalInt != 0 {
+                    return false
+                } else {
+                    return true
+                }
+            }
         } else if repeatRuleFrequency == MONTHLY_FREQUENCY {
             if let repeatRuleCount = repeatRuleCount, let repeatRuleCountInt = Int(repeatRuleCount) {
                 let monthsUntilLastOccurrence = (repeatRuleCountInt - 1) * repeatRuleIntervalInt
