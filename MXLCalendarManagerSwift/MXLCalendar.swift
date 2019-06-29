@@ -125,7 +125,7 @@ public class MXLCalendar {
 }
 
 public extension MXLCalendar {
-    public func containsEvent(at time: Date) -> Bool {
+    func containsEvent(at time: Date) -> Bool {
         return events.contains(where: { (event: MXLCalendarEvent) -> Bool in
             return event.checkTime(targetTime: time)
         })
