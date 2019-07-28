@@ -44,7 +44,9 @@ public class MXLCalendarManager {
                 fileData = try Data(contentsOf: fileURL)
             } catch (let downloadError) {
                 #if os(iOS)
+                DispatchQueue.main.async {
                     UIApplication.shared.isNetworkActivityIndicatorVisible = false
+                }
                 #endif
                 callback(nil, downloadError)
                 return
