@@ -26,10 +26,10 @@
 import Foundation
 
 public enum Role: String {
-    case CHAIR
-    case REQ_PARTICIPANT
-    case OPT_PARTICIPANT
-    case NON_PARTICIPANT
+    case CHAIR = "CHAIR"
+    case REQ_PARTICIPANT = "REQ-PARTICIPANT"
+    case OPT_PARTICIPANT = "OPT-PARTICIPANT"
+    case NON_PARTICIPANT = "NON-PARTICIPANT"
 
 }
 
