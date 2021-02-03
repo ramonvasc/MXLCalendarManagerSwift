@@ -131,7 +131,8 @@ public class MXLCalendarEvent {
         self.eventUniqueID = uniqueID
         self.eventRecurrenceID = recurrenceID
         self.eventSummary = summary.replacingOccurrences(of: "\\", with: "")
-        self.eventDescription = description.replacingOccurrences(of: "\\", with: "")
+        self.eventDescription = description.replacingOccurrences(of: "\\n", with: "\n")
+            .replacingOccurrences(of: "\\", with: "")
         self.eventLocation = location.replacingOccurrences(of: "\\", with: "")
         self.eventStatus = status
         self.attendees = attendees
