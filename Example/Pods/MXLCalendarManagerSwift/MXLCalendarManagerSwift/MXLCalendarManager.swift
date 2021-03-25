@@ -31,6 +31,69 @@ import Foundation
 
 public class MXLCalendarManager {
 
+    private lazy var specialCharacters: [String: String] = {
+        var result = [String: String]()
+        result["Ã¼"] = "ü"
+        result["Ã¤"] = "ä"
+        result["Ã¶"] = "ö"
+        result["Ã–"] = "Ö"
+        result["ÃŸ"] = "ß"
+        result["Ã "] = "à"
+        result["Ã¡"] = "á"
+        result["Ã¢"] = "â"
+        result["Ã£"] = "ã"
+        result["Ã¹"] = "ù"
+        result["Ãº"] = "ú"
+        result["Ã»"] = "û"
+        result["Ã™"] = "Ù"
+        result["Ãš"] = "Ú"
+        result["Ã›"] = "Û"
+        result["Ãœ"] = "Ü"
+        result["Ã²"] = "ò"
+        result["Ã³"] = "ó"
+        result["Ã´"] = "ô"
+        result["Ã¨"] = "è"
+        result["Ã©"] = "é"
+        result["Ãª"] = "ê"
+        result["Ã«"] = "ë"
+        result["Ã€"] = "À"
+        result["Ã"] = "Á"
+        result["Ã‚"] = "Â"
+        result["Ãƒ"] = "Ã"
+        result["Ã„"] = "Ä"
+        result["Ã…"] = "Å"
+        result["Ã‡"] = "Ç"
+        result["Ãˆ"] = "È"
+        result["Ã‰"] = "É"
+        result["ÃŠ"] = "Ê"
+        result["Ã‹"] = "Ë"
+        result["ÃŒ"] = "Ì"
+        result["Ã"] = "Í"
+        result["ÃŽ"] = "Î"
+        result["Ã"] = "Ï"
+        result["Ã‘"] = "Ñ"
+        result["Ã’"] = "Ò"
+        result["Ã“"] = "Ó"
+        result["Ã”"] = "Ô"
+        result["Ã•"] = "Õ"
+        result["Ã˜"] = "Ø"
+        result["Ã¥"] = "å"
+        result["Ã¦"] = "æ"
+        result["Ã§"] = "ç"
+        result["Ã¬"] = "ì"
+        result["Ã­"] = "í"
+        result["Ã®"] = "î"
+        result["Ã¯"] = "ï"
+        result["Ã°"] = "ð"
+        result["Ã±"] = "ñ"
+        result["Ãµ"] = "õ"
+        result["Ã¸"] = "ø"
+        result["Ã½"] = "ý"
+        result["Ã¿"] = "ÿ"
+        result["â‚¬"] = "€"
+        return result
+    }()
+    
     public init() {}
 
     public func scanICSFileAtRemoteURL(fileURL: URL, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
@@ -44,9 +107,7 @@ public class MXLCalendarManager {
                 fileData = try Data(contentsOf: fileURL)
             } catch (let downloadError) {
                 #if os(iOS)
-                DispatchQueue.main.async {
                     UIApplication.shared.isNetworkActivityIndicatorVisible = false
-                }
                 #endif
                 callback(nil, downloadError)
                 return
@@ -56,10 +117,34 @@ public class MXLCalendarManager {
                 #if os(iOS)
                     UIApplication.shared.isNetworkActivityIndicatorVisible = false
                 #endif
-                guard let fileString = String(data: fileData, encoding: .utf8) else {
+                
+                // Try to decode the data with various encoding types (in order to also support invalid encoded files).
+                var encodingTypes = [String.Encoding]()
+                encodingTypes.append(.utf8)
+                encodingTypes.append(.isoLatin1)
+                
+                var icsString: String?
+                for encodingType in encodingTypes {
+                    if let decodedString = String(data: fileData, encoding: encodingType) {
+                        icsString = decodedString
+                        break
+                    }
+                }
+                
+                guard icsString != nil else {
+                    callback(nil, nil)
                     return
                 }
-                self.parse(icsString: fileString, withCompletionHandler: callback)
+                
+                // Replace wrongly encoded characters.
+                for key in self.specialCharacters.keys {
+                    icsString = icsString!.replacingOccurrences(
+                        of: key,
+                        with: self.specialCharacters[key]!)
+                }
+                
+                // Parse the iCal string.
+                self.parse(icsString: icsString!, withCompletionHandler: callback)
             }
         }
     }
