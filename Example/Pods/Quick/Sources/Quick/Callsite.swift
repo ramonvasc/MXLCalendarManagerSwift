@@ -1,10 +1,12 @@
 import Foundation
 
-#if canImport(Darwin) && !SWIFT_PACKAGE
+#if canImport(Darwin)
+// swiftlint:disable type_name
 @objcMembers
 public class _CallsiteBase: NSObject {}
 #else
 public class _CallsiteBase: NSObject {}
+// swiftlint:enable type_name
 #endif
 
 // Ideally we would always use `StaticString` as the type for tracking the file name
@@ -12,7 +14,7 @@ public class _CallsiteBase: NSObject {}
 // stdlib, and because recent versions of the XCTest overlay require `StaticString`
 // when calling `XCTFail`. Under the Objective-C runtime (i.e. building on macOS), we
 // have to use `String` instead because StaticString can't be generated from Objective-C
-#if SWIFT_PACKAGE
+#if !canImport(Darwin)
 public typealias FileString = StaticString
 #else
 public typealias FileString = String

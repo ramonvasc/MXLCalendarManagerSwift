@@ -1,17 +1,13 @@
-import Foundation
-
 /// A Nimble matcher that succeeds when the actual expression evaluates to an
 /// error from the specified case.
 ///
 /// Errors are tried to be compared by their implementation of Equatable,
 /// otherwise they fallback to comparison by _domain and _code.
-public func matchError<T: Error>(_ error: T) -> Predicate<Error> {
-    return Predicate.define { actualExpression in
+public func matchError<T: Error>(_ error: T) -> Matcher<Error> {
+    return Matcher.define { actualExpression in
         let actualError = try actualExpression.evaluate()
 
-        let failureMessage = FailureMessage()
-        setFailureMessageForError(
-            failureMessage,
+        let message = messageForError(
             postfixMessageVerb: "match",
             actualError: actualError,
             error: error
@@ -22,7 +18,7 @@ public func matchError<T: Error>(_ error: T) -> Predicate<Error> {
             matches = true
         }
 
-        return PredicateResult(bool: matches, message: failureMessage.toExpectationMessage())
+        return MatcherResult(bool: matches, message: message)
     }
 }
 
@@ -31,13 +27,11 @@ public func matchError<T: Error>(_ error: T) -> Predicate<Error> {
 ///
 /// Errors are tried to be compared by their implementation of Equatable,
 /// otherwise they fallback to comparision by _domain and _code.
-public func matchError<T: Error & Equatable>(_ error: T) -> Predicate<Error> {
-    return Predicate.define { actualExpression in
+public func matchError<T: Error & Equatable>(_ error: T) -> Matcher<Error> {
+    return Matcher.define { actualExpression in
         let actualError = try actualExpression.evaluate()
 
-        let failureMessage = FailureMessage()
-        setFailureMessageForError(
-            failureMessage,
+        let message = messageForError(
             postfixMessageVerb: "match",
             actualError: actualError,
             error: error
@@ -48,19 +42,17 @@ public func matchError<T: Error & Equatable>(_ error: T) -> Predicate<Error> {
             matches = true
         }
 
-        return PredicateResult(bool: matches, message: failureMessage.toExpectationMessage())
+        return MatcherResult(bool: matches, message: message)
     }
 }
 
 /// A Nimble matcher that succeeds when the actual expression evaluates to an
 /// error of the specified type
-public func matchError<T: Error>(_ errorType: T.Type) -> Predicate<Error> {
-    return Predicate.define { actualExpression in
+public func matchError<T: Error>(_ errorType: T.Type) -> Matcher<Error> {
+    return Matcher.define { actualExpression in
         let actualError = try actualExpression.evaluate()
 
-        let failureMessage = FailureMessage()
-        setFailureMessageForError(
-            failureMessage,
+        let message = messageForError(
             postfixMessageVerb: "match",
             actualError: actualError,
             errorType: errorType
@@ -71,6 +63,6 @@ public func matchError<T: Error>(_ errorType: T.Type) -> Predicate<Error> {
             matches = true
         }
 
-        return PredicateResult(bool: matches, message: failureMessage.toExpectationMessage())
+        return MatcherResult(bool: matches, message: message)
     }
 }
