@@ -174,25 +174,15 @@ public class MXLCalendarEvent {
 
         let rulesArray = rule.components(separatedBy: ";") // Split up rules string into array
 
-        var frequencyPointer: NSString?
         var frequency = String()
-        var countPointer: NSString?
         var count = String()
-        var untilPointer: NSString?
         var untilString = String()
-        var intervalPointer: NSString?
         var interval = String()
-        var byDayPointer: NSString?
         var byDay = String()
-        var byMonthDayPointer: NSString?
         var byMonthDay = String()
-        var byYearDayPointer: NSString?
         var byYearDay = String()
-        var byWeekNoPointer: NSString?
         var byWeekNo = String()
-        var byMonthPointer: NSString?
         var byMonth = String()
-        var weekStartPointer: NSString?
         var weekStart = String()
 
         // Loop through each rule
@@ -201,9 +191,8 @@ public class MXLCalendarEvent {
 
             // If the rule is for the FREQuency
             if rule.range(of: "FREQ") != nil {
-                ruleScanner.scanUpTo("=", into: nil)
-                ruleScanner.scanUpTo(";", into: &frequencyPointer)
-                frequency = String(frequencyPointer ?? "")
+                _ = ruleScanner.scanUpToString("=")
+                frequency = ruleScanner.scanUpToString(";") ?? ""
                 frequency = frequency.replacingOccurrences(of: "=", with: "")
 
                 if type == .MXLCalendarEventRuleTypeRepetition {
@@ -215,9 +204,8 @@ public class MXLCalendarEvent {
 
             // If the rule is COUNT
             if rule.range(of: "COUNT") != nil {
-                ruleScanner.scanUpTo("=", into: nil)
-                ruleScanner.scanUpTo(";", into: &countPointer)
-                count = String(countPointer ?? "")
+                _ = ruleScanner.scanUpToString("=")
+                count = ruleScanner.scanUpToString(";") ?? ""
                 count = count.replacingOccurrences(of: "=", with: "")
 
                 if type == . MXLCalendarEventRuleTypeRepetition {
@@ -229,9 +217,8 @@ public class MXLCalendarEvent {
 
             // If the rule is for the UNTIL date
             if rule.range(of: "UNTIL") != nil {
-                ruleScanner.scanUpTo("=", into: nil)
-                ruleScanner.scanUpTo(";", into: &untilPointer)
-                untilString = String(untilPointer ?? "")
+                _ = ruleScanner.scanUpToString("=")
+                untilString = ruleScanner.scanUpToString(";") ?? ""
                 untilString = untilString.replacingOccurrences(of: "=", with: "")
 
                 if type == .MXLCalendarEventRuleTypeRepetition {
@@ -243,9 +230,8 @@ public class MXLCalendarEvent {
 
             // If the rule is INTERVAL
             if rule.range(of: "INTERVAL") != nil {
-                ruleScanner.scanUpTo("=", into: nil)
-                ruleScanner.scanUpTo(";", into: &intervalPointer)
-                interval = String(intervalPointer ?? "")
+                _ = ruleScanner.scanUpToString("=")
+                interval = ruleScanner.scanUpToString(";") ?? ""
                 interval = interval.replacingOccurrences(of: "=", with: "")
 
                 if type == . MXLCalendarEventRuleTypeRepetition {
@@ -257,9 +243,8 @@ public class MXLCalendarEvent {
 
             // If the rule is BYDAY
             if rule.range(of: "BYDAY") != nil {
-                ruleScanner.scanUpTo("=", into: nil)
-                ruleScanner.scanUpTo(";", into: &byDayPointer)
-                byDay = String(byDayPointer ?? "")
+                _ = ruleScanner.scanUpToString("=")
+                byDay = ruleScanner.scanUpToString(";") ?? ""
                 byDay = byDay.replacingOccurrences(of: "=", with: "")
 
                 if type == . MXLCalendarEventRuleTypeRepetition {
@@ -271,9 +256,8 @@ public class MXLCalendarEvent {
 
             // If the rule is BYMONTHDAY
             if rule.range(of: "BYMONTHDAY") != nil {
-                ruleScanner.scanUpTo("=", into: nil)
-                ruleScanner.scanUpTo(";", into: &byMonthDayPointer)
-                byMonthDay = String(byMonthDayPointer ?? "")
+                _ = ruleScanner.scanUpToString("=")
+                byMonthDay = ruleScanner.scanUpToString(";") ?? ""
                 byMonthDay = byMonthDay.replacingOccurrences(of: "=", with: "")
 
                 if type == . MXLCalendarEventRuleTypeRepetition {
@@ -285,9 +269,8 @@ public class MXLCalendarEvent {
 
             // If the rule is BYYEARDAY
             if rule.range(of: "BYYEARDAY") != nil {
-                ruleScanner.scanUpTo("=", into: nil)
-                ruleScanner.scanUpTo(";", into: &byYearDayPointer)
-                byYearDay = String(byYearDayPointer ?? "")
+                _ = ruleScanner.scanUpToString("=")
+                byYearDay = ruleScanner.scanUpToString(";") ?? ""
                 byYearDay = byYearDay.replacingOccurrences(of: "=", with: "")
 
                 if type == . MXLCalendarEventRuleTypeRepetition {
@@ -299,9 +282,8 @@ public class MXLCalendarEvent {
 
             // If the rule is BYWEEKNO
             if rule.range(of: "BYWEEKNO") != nil {
-                ruleScanner.scanUpTo("=", into: nil)
-                ruleScanner.scanUpTo(";", into: &byWeekNoPointer)
-                byWeekNo = String(byWeekNoPointer ?? "")
+                _ = ruleScanner.scanUpToString("=")
+                byWeekNo = ruleScanner.scanUpToString(";") ?? ""
                 byWeekNo = byWeekNo.replacingOccurrences(of: "=", with: "")
 
                 if type == . MXLCalendarEventRuleTypeRepetition {
@@ -313,9 +295,8 @@ public class MXLCalendarEvent {
 
             // If the rule is BYMONTH
             if rule.range(of: "BYMONTH=") != nil {
-                ruleScanner.scanUpTo("=", into: nil)
-                ruleScanner.scanUpTo(";", into: &byMonthPointer)
-                byMonth = String(byMonthPointer ?? "")
+                _ = ruleScanner.scanUpToString("=")
+                byMonth = ruleScanner.scanUpToString(";") ?? ""
                 byMonth = byMonth.replacingOccurrences(of: "=", with: "")
 
                 if type == . MXLCalendarEventRuleTypeRepetition {
@@ -327,9 +308,8 @@ public class MXLCalendarEvent {
 
             // If the rule is WKST
             if rule.range(of: "WKST") != nil {
-                ruleScanner.scanUpTo("=", into: nil)
-                ruleScanner.scanUpTo(";", into: &weekStartPointer)
-                weekStart = String(weekStartPointer ?? "")
+                _ = ruleScanner.scanUpToString("=")
+                weekStart = ruleScanner.scanUpToString(";") ?? ""
                 weekStart = weekStart.replacingOccurrences(of: "=", with: "")
 
                 if type == . MXLCalendarEventRuleTypeRepetition {
