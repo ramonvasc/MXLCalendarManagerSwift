@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D25578A7AA63BDDF1E2EE0DD683A5A6C"
-               BuildableName = "MXLCalendarManagerSwift"
+               BuildableName = "MXLCalendarManagerSwift.framework"
                BlueprintName = "MXLCalendarManagerSwift"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>
@@ -44,7 +44,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D25578A7AA63BDDF1E2EE0DD683A5A6C"
-            BuildableName = "MXLCalendarManagerSwift"
+            BuildableName = "MXLCalendarManagerSwift.framework"
             BlueprintName = "MXLCalendarManagerSwift"
             ReferencedContainer = "container:Pods.xcodeproj">
          </BuildableReference>

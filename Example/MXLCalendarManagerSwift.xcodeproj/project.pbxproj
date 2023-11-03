@@ -177,6 +177,7 @@
 				607FACCC1AFB9204008FA782 /* Sources */,
 				607FACCD1AFB9204008FA782 /* Frameworks */,
 				607FACCE1AFB9204008FA782 /* Resources */,
+				5186DCFE003D308754AC7722 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -288,6 +289,24 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MXLCalendarManagerSwift_Tests/Pods-MXLCalendarManagerSwift_Tests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		5186DCFE003D308754AC7722 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-MXLCalendarManagerSwift_Example/Pods-MXLCalendarManagerSwift_Example-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/MXLCalendarManagerSwift/MXLCalendarManagerSwift.framework",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MXLCalendarManagerSwift.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MXLCalendarManagerSwift_Example/Pods-MXLCalendarManagerSwift_Example-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		DDC084D4941297906B05A993 /* [CP] Check Pods Manifest.lock */ = {
@@ -493,6 +512,7 @@
 			baseConfigurationReference = DC9D029942756C48EBD9D68C /* Pods-MXLCalendarManagerSwift_Example.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				INFOPLIST_FILE = MXLCalendarManagerSwift/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -511,6 +531,7 @@
 			baseConfigurationReference = 8266A444D0AE9C0F5BE897A8 /* Pods-MXLCalendarManagerSwift_Example.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				INFOPLIST_FILE = MXLCalendarManagerSwift/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -528,6 +549,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 16B7842C982FFE23CE2199E7 /* Pods-MXLCalendarManagerSwift_Tests.debug.xcconfig */;
 			buildSettings = {
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
@@ -553,6 +575,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 7116CE35DEDA63217F3B26AA /* Pods-MXLCalendarManagerSwift_Tests.release.xcconfig */;
 			buildSettings = {
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",

@@ -2,7 +2,7 @@ use_frameworks!
 platform :ios, '13'
 
 target 'MXLCalendarManagerSwift_Example' do
-  pod 'MXLCalendarManagerSwift', :git => 'https://github.com/ramonvasc/MXLCalendarManagerSwift.git'
+  pod 'MXLCalendarManagerSwift', :git => 'https://github.com/ramonvasc/MXLCalendarManagerSwift.git', :branch => 'master'
 
   target 'MXLCalendarManagerSwift_Tests' do
     inherit! :search_paths
