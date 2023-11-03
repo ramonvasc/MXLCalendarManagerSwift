@@ -1,18 +1,18 @@
-import MXLCalendarManagerSwift
 import XCTest
+@testable import MXLCalendarManagerSwift
 
 final class MXLCalendarManagerTests: XCTestCase {
     private let manager = MXLCalendarManager()
     private var parsedCalendar: MXLCalendar!
     private let dateFormatter = DateFormatter()
-    
+
     override func setUp() {
         super.setUp()
-        
+
         dateFormatter.dateFormat = "YYYY-MM-dd HH:mm:ss"
         dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
     }
-    
+
     func parseCalendarWithEvent(eventString: String) {
         let calendarString =
             """
@@ -62,9 +62,9 @@ END:VTIMEZONE
             self.parsedCalendar = calendar
         }
     }
-    
+
     // MARK: - Daily Tests
-    
+
     func testSingleOccurrence() {
         let eventString = """
 BEGIN:VEVENT
@@ -90,7 +90,7 @@ END:VEVENT
         testHelper(trueOccurrences: [firstOccurrence],
                    falseOccurrences: [])
     }
-    
+
     func testOnceDailyNoEndTest() {
         let eventString = """
 BEGIN:VEVENT
@@ -118,11 +118,11 @@ END:VEVENT
                                             begin: "2020-06-18 01:00:01",
                                             end: "2020-06-18 02:00:00",
                                             after: "2020-06-18 02:00:01")
-        
+
         testHelper(trueOccurrences: [occurrence, nextOccurrence],
                    falseOccurrences: [])
     }
-    
+
     func testAllDayOnce() {
         let eventString = """
 BEGIN:VEVENT
@@ -148,7 +148,7 @@ END:VEVENT
         testHelper(trueOccurrences: [occurrence],
                    falseOccurrences: [])
     }
-    
+
     func testSpanDayOnce() {
         let eventString = """
 BEGIN:VEVENT
@@ -173,9 +173,9 @@ END:VEVENT
                                         after: "2019-04-02 12:00:01")
         testHelper(trueOccurrences: [occurrence],
                    falseOccurrences: [])
-        
+
     }
-    
+
     func testEveryOtherDayNoEnd() {
         let eventString = """
 BEGIN:VEVENT
@@ -207,11 +207,11 @@ END:VEVENT
                                            begin: "2019-06-19 17:00:01",
                                            end: "2019-06-19 18:00:00",
                                            after: "2019-06-19 18:00:01")
-        
+
         testHelper(trueOccurrences: [occurrence, occurrence2],
                    falseOccurrences: [nonOccurrence])
     }
-    
+
     func testDailyThatFallsOffAfterDate() {
         let eventString = """
 BEGIN:VEVENT
@@ -243,11 +243,11 @@ END:VEVENT
                                                  begin: "2019-03-10 06:00:01",
                                                  end: "2019-03-10 07:00:00",
                                                  after: "2019-03-10 07:00:01")
-        
+
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
                    falseOccurrences: [afterLastOccurrence])
     }
-    
+
     func testDailyThatFallsOffAfterThreeOccurrences() {
         let eventString = """
 BEGIN:VEVENT
@@ -279,11 +279,11 @@ END:VEVENT
                                                  begin: "2019-03-21 18:00:00",
                                                  end: "2019-03-21 19:00:00",
                                                  after: "2019-03-21 19:00:01")
-        
+
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
                    falseOccurrences: [afterLastOccurrence])
     }
-    
+
     func testDailySpanWithABreak() {
         let eventString = """
 BEGIN:VEVENT
@@ -320,13 +320,13 @@ END:VEVENT
                                                  begin: "2018-08-07 15:00:52",
                                                  end: "2018-08-07 15:59:59",
                                                  after: "2018-08-07 16:00:01")
-        
+
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
                    falseOccurrences: [breakOccurrence, afterLastOccurrence])
     }
-    
+
     // MARK: - Week Tests
-    
+
     func testOnceWeeklyNoEnd() {
         let eventString = """
 BEGIN:VEVENT
@@ -354,11 +354,11 @@ END:VEVENT
                                             begin: "2019-06-24 15:00:01",
                                             end: "2019-06-24 16:00:00",
                                             after: "2019-04-05 16:00:01")
-        
+
         testHelper(trueOccurrences: [firstOccurrence, nextOccurrence],
                    falseOccurrences: [])
     }
-    
+
     func testOnceWeeklySpans2Days() {
         let eventString = """
 BEGIN:VEVENT
@@ -390,11 +390,11 @@ END:VEVENT
                                                  begin: "2019-04-12 23:00:00",
                                                  end: "2019-04-13 01:00:00",
                                                  after: "2019-04-13 01:00:01")
-        
+
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
                    falseOccurrences: [afterLastOccurrence])
     }
-    
+
     func testOnceWeeklyThatFallsOffAfterThreeOccurances() {
         let eventString = """
 BEGIN:VEVENT
@@ -426,11 +426,11 @@ END:VEVENT
                                                  begin: "2019-04-12 15:00:00",
                                                  end: "2019-04-12 16:00:00",
                                                  after: "2019-04-12 16:00:01")
-        
+
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
                    falseOccurrences: [afterLastOccurrence])
     }
-    
+
     func testOnceWeeklyThatFallsOffAfterDate() {
         let eventString = """
 BEGIN:VEVENT
@@ -466,11 +466,11 @@ END:VEVENT
                                                   begin: "2019-04-12 12:00:01",
                                                   end: "2019-04-12 13:00:00",
                                                   after: "2019-04-12 13:00:01")
-        
+
         testHelper(trueOccurrences: [firstOccurrence, nextOccurrence],
                    falseOccurrences: [afterLastOccurrence, afterLastOccurrence2])
     }
-    
+
     func testWeeklySpanWithABreak() {
         let eventString = """
 BEGIN:VEVENT
@@ -507,13 +507,13 @@ END:VEVENT
                                                  begin: "2017-09-15 15:00:00",
                                                  end: "2017-09-15 15:59:59",
                                                  after: "2017-09-15 16:01:01")
-        
+
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
                    falseOccurrences: [breakOccurrence, afterLastOccurrence])
     }
-    
+
     // MARK - Month Tests
-    
+
     func testOnceMonthlyNoEnd() {
         let eventString = """
 BEGIN:VEVENT
@@ -544,7 +544,7 @@ END:VEVENT
         testHelper(trueOccurrences: [firstOccurrence, nextOccurrence],
                    falseOccurrences: [])
     }
-    
+
     func testOnceMonthlyFallsOffAfterThreeTimes() {
         let eventString = """
 BEGIN:VEVENT
@@ -580,11 +580,11 @@ END:VEVENT
                                                  begin: "2019-04-03 01:00:01",
                                                  end: "2019-03-04 02:00:00",
                                                  after: "2019-04-03 02:00:01")
-        
+
         testHelper(trueOccurrences: [firstOccurrence, nextOccurrence, lastOccurrence],
                    falseOccurrences: [afterLastOccurrence])
     }
-    
+
     func testOnceMonthlyFallsOffAfterDate() {
         let eventString = """
 BEGIN:VEVENT
@@ -617,11 +617,11 @@ END:VEVENT
                                                  begin: "2019-03-03 15:00:01",
                                                  end: "2019-03-03 16:00:00",
                                                  after: "2019-03-03 16:00:01")
-        
+
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
                    falseOccurrences: [afterLastOccurrence])
     }
-    
+
     func testMonthlySpanWithBreak() {
         let eventString = """
 BEGIN:VEVENT
@@ -659,13 +659,13 @@ END:VCALENDAR
                                                  begin: "2017-06-08 16:00:00",
                                                  end: "2017-06-08 16:59:59",
                                                  after: "2017-06-08 17:01:01")
-        
+
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
                    falseOccurrences: [breakOccurrence, afterLastOccurrence])
     }
-    
+
     // MARK - Year Tests
-    
+
     func testOnceYearlyNoEnd() {
         let eventString = """
 BEGIN:VEVENT
@@ -705,7 +705,7 @@ END:VEVENT
         testHelper(trueOccurrences: [occurrence, occurrence2, farFuture],
                    falseOccurrences: [])
     }
-    
+
     func testOnceYearlyFallsOffAfter2Times() {
         let eventString = """
 BEGIN:VEVENT
@@ -737,11 +737,11 @@ END:VEVENT
                                                  begin: "2021-12-24 20:00:00",
                                                  end: "2021-12-24 21:00:00",
                                                  after: "2021-12-24 21:00:01")
-        
+
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
                    falseOccurrences: [afterLastOccurrence])
     }
-    
+
     func testOnceYearlyFallsOffAfterDate() {
         let eventString = """
 BEGIN:VEVENT
@@ -773,41 +773,41 @@ END:VEVENT
                                                  begin: "2021-12-23 20:00:01",
                                                  end: "2021-12-23 21:00:00",
                                                  after: "2021-12-23 21:00:01")
-        
+
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
                    falseOccurrences: [afterLastOccurrence])
     }
-    
+
     // MARK - Helpers
-    
+
     struct DatePack {
         let middle: Date!
         let begin: Date!
         let end: Date!
         let after: Date!
     }
-    
+
     func createDatePack(middle: String, begin: String, end: String, after: String) -> DatePack {
         return DatePack(middle: dateFormatter.date(from: middle),
                         begin: dateFormatter.date(from: begin),
                         end: dateFormatter.date(from: end),
                         after: dateFormatter.date(from: after))
     }
-    
+
     private func testHelper(trueOccurrences: [DatePack], falseOccurrences: [DatePack]) {
         for occurrence in trueOccurrences {
             // Test middle
             XCTAssert(parsedCalendar.containsEvent(at: occurrence.middle), String(describing: occurrence.middle))
-            
+
             // Test boundaries
             XCTAssert(parsedCalendar.containsEvent(at: occurrence.begin), String(describing: occurrence.begin))
             XCTAssert(parsedCalendar.containsEvent(at: occurrence.end), String(describing: occurrence.end))
             XCTAssertFalse(parsedCalendar.containsEvent(at: occurrence.after), String(describing: occurrence.after))
         }
-        
+
         for occurrence in falseOccurrences {
             XCTAssertFalse(parsedCalendar.containsEvent(at: occurrence.middle), String(describing: occurrence.middle))
-            
+
             XCTAssertFalse(parsedCalendar.containsEvent(at: occurrence.begin), String(describing: occurrence.begin))
             XCTAssertFalse(parsedCalendar.containsEvent(at: occurrence.end), String(describing: occurrence.end))
             XCTAssertFalse(parsedCalendar.containsEvent(at: occurrence.after), String(describing: occurrence.after))
