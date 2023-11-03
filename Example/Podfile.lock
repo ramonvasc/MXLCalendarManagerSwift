@@ -4,7 +4,7 @@ PODS:
   - Quick (7.3.0)
 
 DEPENDENCIES:
-  - MXLCalendarManagerSwift (from `https://github.com/ramonvasc/MXLCalendarManagerSwift.git`, branch `update-swift-version`)
+  - MXLCalendarManagerSwift (from `https://github.com/ramonvasc/MXLCalendarManagerSwift.git`, branch `master`)
   - Nimble
   - Quick
 
@@ -15,12 +15,12 @@ SPEC REPOS:
 
 EXTERNAL SOURCES:
   MXLCalendarManagerSwift:
-    :branch: update-swift-version
+    :branch: master
     :git: https://github.com/ramonvasc/MXLCalendarManagerSwift.git
 
 CHECKOUT OPTIONS:
   MXLCalendarManagerSwift:
-    :commit: 89c06153800198ddfeb5f104d6144192309e01a8
+    :commit: d3c247f4d1de0fc9dfc823227648b060713b54a2
     :git: https://github.com/ramonvasc/MXLCalendarManagerSwift.git
 
 SPEC CHECKSUMS:
@@ -28,6 +28,6 @@ SPEC CHECKSUMS:
   Nimble: 97d90931cca412a23224ff29e258809f75c258f7
   Quick: d32871931c05547cb4e0bc9009d66a18b50d8558
 
-PODFILE CHECKSUM: 3ed47ba9e843d1fca1a1b24e8326fca4a55e1718
+PODFILE CHECKSUM: 7c6fa879e3082bd85cdda222e972552b318552b8
 
 COCOAPODS: 1.14.2
