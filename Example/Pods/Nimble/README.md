@@ -1,11 +1,9 @@
 # Nimble
 
-[![Build Status](https://travis-ci.org/Quick/Nimble.svg?branch=master)](https://travis-ci.org/Quick/Nimble)
+[![Build Status](https://github.com/Quick/Nimble/actions/workflows/ci-xcode.yml/badge.svg)](https://github.com/Quick/Nimble/actions/workflows/ci-xcode.yml)
 [![CocoaPods](https://img.shields.io/cocoapods/v/Nimble.svg)](https://cocoapods.org/pods/Nimble)
 [![Carthage Compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
-[![Accio supported](https://img.shields.io/badge/Accio-supported-0A7CF5.svg?style=flat)](https://github.com/JamitLabs/Accio)
 [![Platforms](https://img.shields.io/cocoapods/p/Nimble.svg)](https://cocoapods.org/pods/Nimble)
-[![Reviewed by Hound](https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg)](https://houndci.com)
 
 Use Nimble to express the expected outcomes of Swift
 or Objective-C expressions. Inspired by
@@ -34,7 +32,8 @@ expect(ocean.isClean).toEventually(beTruthy())
   - [Operator Overloads](#operator-overloads)
   - [Lazily Computed Values](#lazily-computed-values)
   - [C Primitives](#c-primitives)
-  - [Asynchronous Expectations](#asynchronous-expectations)
+  - [Async/Await in Expectations](#asyncawait-support)
+  - [Polling Expectations](#polling-expectations)
   - [Objective-C Support](#objective-c-support)
   - [Disabling Objective-C Shorthand](#disabling-objective-c-shorthand)
 - [Built-in Matcher Functions](#built-in-matcher-functions)
@@ -52,10 +51,11 @@ expect(ocean.isClean).toEventually(beTruthy())
   - [Collection Elements](#collection-elements)
   - [Collection Count](#collection-count)
   - [Notifications](#notifications)
+  - [Result](#result)
   - [Matching a value to any of a group of matchers](#matching-a-value-to-any-of-a-group-of-matchers)
   - [Custom Validation](#custom-validation)
 - [Writing Your Own Matchers](#writing-your-own-matchers)
-  - [PredicateResult](#predicateresult)
+  - [MatcherResult](#matcherresult)
   - [Lazy Evaluation](#lazy-evaluation)
   - [Type Checking via Swift Generics](#type-checking-via-swift-generics)
   - [Customizing Failure Messages](#customizing-failure-messages)
@@ -64,14 +64,9 @@ expect(ocean.isClean).toEventually(beTruthy())
   - [Supporting Objective-C](#supporting-objective-c)
     - [Properly Handling `nil` in Objective-C Matchers](#properly-handling-nil-in-objective-c-matchers)
   - [Migrating from the Old Matcher API](#migrating-from-the-old-matcher-api)
-    - [Minimal Step - Use `.predicate`](#minimal-step---use-predicate)
-    - [Convert to use `Predicate` Type with Old Matcher Constructor](#convert-to-use-predicate-type-with-old-matcher-constructor)
-    - [Convert to `Predicate` Type with Preferred Constructor](#convert-to-predicate-type-with-preferred-constructor)
-    - [Deprecation Roadmap](#deprecation-roadmap)
 - [Installing Nimble](#installing-nimble)
   - [Installing Nimble as a Submodule](#installing-nimble-as-a-submodule)
   - [Installing Nimble via CocoaPods](#installing-nimble-via-cocoapods)
-  - [Installing Nimble via Accio](#installing-nimble-via-accio)
   - [Using Nimble without XCTest](#using-nimble-without-xctest)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -303,7 +298,66 @@ expect(1 as CInt).to(equal(1))
 expect(@(1 + 1)).to(equal(@2));
 ```
 
-## Asynchronous Expectations
+## Async/Await Support
+
+Nimble makes it easy to await for an async function to complete. Simply pass
+the async function in to `expect`:
+
+```swift
+// Swift
+await expect { await aFunctionReturning1() }.to(equal(1))
+```
+
+The async function is awaited on first, before passing it to the matcher. This
+enables the matcher to run synchronous code like before, without caring about
+whether the value it's processing was abtained async or not.
+
+Async support is Swift-only, and it requires that you execute the test in an
+async context. For XCTest, this is as simple as marking your test function with
+`async`. If you use Quick, all tests in Quick 6 are executed in an async context.
+In Quick 7 and later, only tests that are in an `AsyncSpec` subclass will be
+executed in an async context.
+
+To avoid a compiler errors when using synchronous `expect` in asynchronous contexts,
+`expect` with async expressions does not support autoclosures. However, the `expecta`
+(expect async) function is provided as an alternative, which does support autoclosures.
+
+```swift
+// Swift
+await expecta(await aFunctionReturning1()).to(equal(1)))
+```
+
+Similarly, if you're ever in a situation where you want to force the compiler to
+produce a `SyncExpectation`, you can use the `expects` (expect sync) function to
+produce a `SyncExpectation`. Like so:
+
+```swift
+// Swift
+expects(someNonAsyncFunction()).to(equal(1)))
+
+expects(await someAsyncFunction()).to(equal(1)) // Compiler error: 'async' call in an autoclosure that does not support concurrency
+```
+
+### Async Matchers
+
+In addition to asserting on async functions prior to passing them to a
+synchronous matcher, you can also write matchers that directly take in an
+async value. These are called `AsyncMatcher`s. This is most obviously useful
+when directly asserting against an actor. In addition to writing your own
+async matchers, Nimble currently ships with async versions of the following
+matchers:
+
+- `allPass`
+- `containElementSatisfying`
+- `satisfyAllOf` and the `&&` operator overload accept both `AsyncMatcher` and
+  synchronous `Matcher`s.
+- `satisfyAnyOf` and the `||` operator overload accept both `AsyncMatcher` and
+  synchronous `Matcher`s.
+
+Note: Async/Await support is different than the `toEventually`/`toEventuallyNot`
+feature described below.
+
+## Polling Expectations
 
 In Nimble, it's easy to make expectations on values that are updated
 asynchronously. Just use `toEventually` or `toEventuallyNot`:
@@ -339,25 +393,56 @@ contains dolphins and whales, the expectation passes. If `ocean` still
 doesn't contain them, even after being continuously re-evaluated for one
 whole second, the expectation fails.
 
-Sometimes it takes more than a second for a value to update. In those
-cases, use the `timeout` parameter:
+### Using Polling Expectations in Async Tests
+
+You can easily use `toEventually` or `toEventuallyNot` in async contexts as
+well. You only need to add an `await` statement to the beginning of the line:
 
 ```swift
 // Swift
+DispatchQueue.main.async {
+    ocean.add("dolphins")
+    ocean.add("whales")
+}
+await expect(ocean).toEventually(contain("dolphens", "whiles"))
+```
 
-// Waits three seconds for ocean to contain "starfish":
-expect(ocean).toEventually(contain("starfish"), timeout: 3)
+Starting in Nimble 12,  `toEventually` et. al. now also supports async
+expectations. For example, the following test is now supported:
 
-// Evaluate someValue every 0.2 seconds repeatedly until it equals 100, or fails if it timeouts after 5.5 seconds.
-expect(someValue).toEventually(equal(100), timeout: 5.5, pollInterval: 0.2)
+```swift
+actor MyActor {
+    private var counter = 0
+
+    func access() -> Int {
+        counter += 1
+        return counter
+    }
+}
+
+let subject = MyActor()
+await expect { await subject.access() }.toEventually(equal(2))
+```
+
+### Verifying a Matcher will Never or Always Match
+
+You can also test that a value always or never matches throughout the length of the timeout. Use `toNever` and `toAlways` for this:
+
+```swift
+// Swift
+ocean.add("dolphins")
+expect(ocean).toAlways(contain("dolphins"))
+expect(ocean).toNever(contain("hares"))
 ```
 
 ```objc
 // Objective-C
-
-// Waits three seconds for ocean to contain "starfish":
-expect(ocean).withTimeout(3).toEventually(contain(@"starfish"));
+[ocean add:@"dolphins"]
+expect(ocean).toAlways(contain(@"dolphins"))
+expect(ocean).toNever(contain(@"hares"))
 ```
+
+### Waiting for a Callback to be Called
 
 You can also provide a callback by using the `waitUntil` function:
 
@@ -388,7 +473,7 @@ waitUntil(^(void (^done)(void)){
 ```swift
 // Swift
 
-waitUntil(timeout: 10) { done in
+waitUntil(timeout: .seconds(10)) { done in
     ocean.goFish { success in
         expect(success).to(beTrue())
         done()
@@ -413,6 +498,30 @@ pollution for whatever incomplete code that was running on the main thread.
 Blocking the main thread can be caused by blocking IO, calls to sleep(),
 deadlocks, and synchronous IPC.
 
+### Changing the Timeout and Polling Intervals
+
+Sometimes it takes more than a second for a value to update. In those
+cases, use the `timeout` parameter:
+
+```swift
+// Swift
+
+// Waits three seconds for ocean to contain "starfish":
+expect(ocean).toEventually(contain("starfish"), timeout: .seconds(3))
+
+// Evaluate someValue every 0.2 seconds repeatedly until it equals 100, or fails if it timeouts after 5.5 seconds.
+expect(someValue).toEventually(equal(100), timeout: .milliseconds(5500), pollInterval: .milliseconds(200))
+```
+
+```objc
+// Objective-C
+
+// Waits three seconds for ocean to contain "starfish":
+expect(ocean).withTimeout(3).toEventually(contain(@"starfish"));
+```
+
+### Changing default Timeout and Poll Intervals
+
 In some cases (e.g. when running on slower machines) it can be useful to modify
 the default timeout and poll interval values. This can be done as follows:
 
@@ -420,11 +529,72 @@ the default timeout and poll interval values. This can be done as follows:
 // Swift
 
 // Increase the global timeout to 5 seconds:
-Nimble.AsyncDefaults.Timeout = 5
+Nimble.PollingDefaults.timeout = .seconds(5)
 
 // Slow the polling interval to 0.1 seconds:
-Nimble.AsyncDefaults.PollInterval = 0.1
+Nimble.PollingDefaults.pollInterval = .milliseconds(100)
 ```
+
+You can set these globally at test startup in two ways:
+
+#### Quick
+
+If you use [Quick](https://github.com/Quick/Quick), add a [`QuickConfiguration` subclass](https://github.com/Quick/Quick/blob/main/Documentation/en-us/ConfiguringQuick.md) which sets your desired `PollingDefaults`.
+
+```swift
+import Quick
+import Nimble
+
+class PollingConfiguration: QuickConfiguration {
+    override class func configure(_ configuration: QCKConfiguration) {
+        Nimble.PollingDefaults.timeout = .seconds(5)
+        Nimble.PollingDefaults.pollInterval = .milliseconds(100)
+    }
+}
+```
+
+#### XCTest
+
+If you use [XCTest](https://developer.apple.com/documentation/xctest), add an object that conforms to [`XCTestObservation`](https://developer.apple.com/documentation/xctest/xctestobservation) and implement [`testBundleWillStart(_:)`](https://developer.apple.com/documentation/xctest/xctestobservation/1500772-testbundlewillstart).
+
+Additionally, you will need to register this observer with the [`XCTestObservationCenter`](https://developer.apple.com/documentation/xctest/xctestobservationcenter) at test startup. To do this, set the `NSPrincipalClass` key in your test bundle's Info.plist and implement a class with that same name.
+
+For example
+
+```xml
+<!-- Info.plist -->
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- ... -->
+	<key>NSPrincipalClass</key>
+	<string>MyTests.TestSetup</string>
+</dict>
+</plist>
+```
+
+```swift
+// TestSetup.swift
+import XCTest
+import Nimble
+
+@objc
+class TestSetup: NSObject {
+	override init() {
+		XCTestObservationCenter.shared.register(PollingConfigurationTestObserver())
+	}
+}
+
+class PollingConfigurationTestObserver: NSObject, XCTestObserver {
+    func testBundleWillStart(_ testBundle: Bundle) {
+        Nimble.PollingDefaults.timeout = .seconds(5)
+        Nimble.PollingDefaults.pollInterval = .milliseconds(100)
+    }
+}
+```
+
+In Linux, you can implement `LinuxMain` to set the PollingDefaults before calling `XCTMain`.
 
 ## Objective-C Support
 
@@ -484,6 +654,7 @@ For the following matchers:
 - `beTruthy`
 - `beFalsy`
 - `haveCount`
+
 
 If you would like to see more, [file an issue](https://github.com/Quick/Nimble/issues).
 
@@ -728,8 +899,7 @@ expect([0.0, 2.0]).to(beCloseTo([0.1, 2.1], within: 0.1))
 
 ```
 
-> Values given to the `beCloseTo` matcher must be coercable into a
-  `Double`.
+> Values given to the `beCloseTo` matcher must conform to `FloatingPoint`.
 
 ## Types/Classes
 
@@ -843,7 +1013,6 @@ expect(reachedPoint2) == false
 Notes:
 
 * This feature is only available in Swift.
-* It is only supported for `x86_64` binaries, meaning _you cannot run this matcher on iOS devices, only simulators_.
 * The tvOS simulator is supported, but using a different mechanism, requiring you to turn off the `Debug executable` scheme setting for your tvOS scheme's Test configuration.
 
 ## Swift Error Handling
@@ -1040,6 +1209,9 @@ expect(turtles).to(containElementSatisfying({ turtle in
 // should it fail
 ```
 
+Note: in Swift, `containElementSatisfying` also has a variant that takes in an
+async function.
+
 ```objc
 // Objective-C
 
@@ -1061,6 +1233,18 @@ expect(turtles).to(containElementSatisfying(^BOOL(id __nonnull object) {
 expect(turtles).to(containElementSatisfying(^BOOL(id __nonnull object) {
     return [[turtle color] isEqualToString:@"blue"];
 }));
+```
+
+For asserting on if the given `Comparable` value is inside of a `Range`, use the `beWithin` matcher.
+
+```swift
+// Swift
+
+// Passes if 5 is within the range 1 through 10, inclusive
+expect(5).to(beWithin(1...10))
+
+// Passes if 5 is not within the range 2 through 4.
+expect(5).toNot(beWithin(2..<5))
 ```
 
 ## Strings
@@ -1116,10 +1300,23 @@ In Swift, the collection must be an instance of a type conforming to
 // Swift
 
 // Providing a custom function:
-expect([1, 2, 3, 4]).to(allPass { $0! < 5 })
+expect([1, 2, 3, 4]).to(allPass { $0 < 5 })
 
 // Composing the expectation with another matcher:
 expect([1, 2, 3, 4]).to(allPass(beLessThan(5)))
+```
+
+There are also variants of `allPass` that check against async matchers, and
+that take in async functions:
+
+```swift
+// Swift
+
+// Providing a custom function:
+expect([1, 2, 3, 4]).to(allPass { await asyncFunctionReturningBool($0) })
+
+// Composing the expectation with another matcher:
+expect([1, 2, 3, 4]).to(allPass(someAsyncMatcher()))
 ```
 
 ### Objective-C
@@ -1173,20 +1370,62 @@ For Objective-C, the actual value must be one of the following classes, or their
 
 ```swift
 // Swift
-let testNotification = Notification(name: "Foo", object: nil)
+let testNotification = Notification(name: Notification.Name("Foo"), object: nil)
 
-// passes if the closure in expect { ... } posts a notification to the default
+// Passes if the closure in expect { ... } posts a notification to the default
 // notification center.
 expect {
-    NotificationCenter.default.postNotification(testNotification)
-}.to(postNotifications(equal([testNotification]))
+    NotificationCenter.default.post(testNotification)
+}.to(postNotifications(equal([testNotification])))
 
-// passes if the closure in expect { ... } posts a notification to a given
+// Passes if the closure in expect { ... } posts a notification to a given
 // notification center
 let notificationCenter = NotificationCenter()
 expect {
-    notificationCenter.postNotification(testNotification)
-}.to(postNotifications(equal([testNotification]), fromNotificationCenter: notificationCenter))
+    notificationCenter.post(testNotification)
+}.to(postNotifications(equal([testNotification]), from: notificationCenter))
+
+// Passes if the closure in expect { ... } posts a notification with the provided names to a given
+// notification center. Make sure to use this when running tests on Catalina, 
+// using DistributedNotificationCenter as there is currently no way 
+// of observing notifications without providing specific names.
+let distributedNotificationCenter = DistributedNotificationCenter()
+expect {
+    distributedNotificationCenter.post(testNotification)
+}.toEventually(postDistributedNotifications(equal([testNotification]),
+                                  from: distributedNotificationCenter,
+                                  names: [testNotification.name]))
+```
+
+> This matcher is only available in Swift.
+
+## Result
+
+```swift
+// Swift
+let aResult: Result<String, Error> = .success("Hooray") 
+
+// passes if result is .success
+expect(aResult).to(beSuccess()) 
+
+// passes if result value is .success and validates Success value
+expect(aResult).to(beSuccess { value in
+    expect(value).to(equal("Hooray"))
+})
+
+
+enum AnError: Error {
+    case somethingHappened
+}
+let otherResult: Result<String, AnError> = .failure(.somethingHappened) 
+
+// passes if result is .failure
+expect(otherResult).to(beFailure()) 
+
+// passes if result value is .failure and validates error
+expect(otherResult).to(beFailure { error in
+    expect(error).to(matchError(AnError.somethingHappened))
+}) 
 ```
 
 > This matcher is only available in Swift.
@@ -1206,6 +1445,9 @@ expect(6).to(satisfyAnyOf(equal(2), equal(3), equal(4), equal(5), equal(6), equa
 // in Swift you also have the option to use the || operator to achieve a similar function
 expect(82).to(beLessThan(50) || beGreaterThan(80))
 ```
+
+Note: In swift, you can mix and match synchronous and asynchronous matchers
+using by `satisfyAnyOf`/`||`.
 
 ```objc
 // Objective-C
@@ -1229,22 +1471,22 @@ Note: This matcher allows you to chain any number of matchers together. This pro
 // Swift
 
 // passes if .succeeded is returned from the closure
-expect({
+expect {
     guard case .enumCaseWithAssociatedValueThatIDontCareAbout = actual else {
         return .failed(reason: "wrong enum case")
     }
 
     return .succeeded
-}).to(succeed())
+}.to(succeed())
 
 // passes if .failed is returned from the closure
-expect({
+expect {
     guard case .enumCaseWithAssociatedValueThatIDontCareAbout = actual else {
         return .failed(reason: "wrong enum case")
     }
 
     return .succeeded
-}).notTo(succeed())
+}.notTo(succeed())
 ```
 
 The `String` provided with `.failed()` is shown when the test fails.
@@ -1254,25 +1496,25 @@ When using `toEventually()` be careful not to make state changes or run process 
 # Writing Your Own Matchers
 
 In Nimble, matchers are Swift functions that take an expected
-value and return a `Predicate` closure. Take `equal`, for example:
+value and return a `Matcher` closure. Take `equal`, for example:
 
 ```swift
 // Swift
 
-public func equal<T: Equatable>(expectedValue: T?) -> Predicate<T> {
+public func equal<T: Equatable>(expectedValue: T?) -> Matcher<T> {
     // Can be shortened to:
-    //   Predicate { actual in  ... }
+    //   Matcher { actual in  ... }
     //
     // But shown with types here for clarity.
-    return Predicate { (actualExpression: Expression<T>) throws -> PredicateResult in
+    return Matcher { (actualExpression: Expression<T>) throws -> MatcherResult in
         let msg = ExpectationMessage.expectedActualValueTo("equal <\(expectedValue)>")
         if let actualValue = try actualExpression.evaluate() {
-            return PredicateResult(
+            return MatcherResult(
                 bool: actualValue == expectedValue!,
                 message: msg
             )
         } else {
-            return PredicateResult(
+            return MatcherResult(
                 status: .fail,
                 message: msg.appendedBeNilHint()
             )
@@ -1281,7 +1523,7 @@ public func equal<T: Equatable>(expectedValue: T?) -> Predicate<T> {
 }
 ```
 
-The return value of a `Predicate` closure is a `PredicateResult` that indicates
+The return value of a `Matcher` closure is a `MatcherResult` that indicates
 whether the actual value matches the expectation and what error message to
 display on failure.
 
@@ -1297,31 +1539,31 @@ in an Xcode project you distribute to others.
   distribute it yourself via GitHub.
 
 For examples of how to write your own matchers, just check out the
-[`Matchers` directory](https://github.com/Quick/Nimble/tree/master/Sources/Nimble/Matchers)
+[`Matchers` directory](https://github.com/Quick/Nimble/tree/main/Sources/Nimble/Matchers)
 to see how Nimble's built-in set of matchers are implemented. You can
 also check out the tips below.
 
-## PredicateResult
+## MatcherResult
 
-`PredicateResult` is the return struct that `Predicate` return to indicate
-success and failure. A `PredicateResult` is made up of two values:
-`PredicateStatus` and `ExpectationMessage`.
+`MatcherResult` is the return struct that `Matcher` return to indicate
+success and failure. A `MatcherResult` is made up of two values:
+`MatcherStatus` and `ExpectationMessage`.
 
-Instead of a boolean, `PredicateStatus` captures a trinary set of values:
+Instead of a boolean, `MatcherStatus` captures a trinary set of values:
 
 ```swift
 // Swift
 
-public enum PredicateStatus {
-// The predicate "passes" with the given expression
+public enum MatcherStatus {
+// The matcher "passes" with the given expression
 // eg - expect(1).to(equal(1))
 case matches
 
-// The predicate "fails" with the given expression
+// The matcher "fails" with the given expression
 // eg - expect(1).toNot(equal(1))
 case doesNotMatch
 
-// The predicate never "passes" with the given expression, even if negated
+// The matcher never "passes" with the given expression, even if negated
 // eg - expect(nil as Int?).toNot(equal(1))
 case fail
 
@@ -1347,11 +1589,11 @@ case fail(/* message: */ String)
 }
 ```
 
-Predicates should usually depend on either `.expectedActualValueTo(..)` or
+Matchers should usually depend on either `.expectedActualValueTo(..)` or
 `.fail(..)` when reporting errors. Special cases can be used for the other enum
 cases.
 
-Finally, if your Predicate utilizes other Predicates, you can utilize
+Finally, if your Matcher utilizes other Matchers, you can utilize
 `.appended(details:)` and `.appended(message:)` methods to annotate an existing
 error with more details.
 
@@ -1368,15 +1610,15 @@ custom matchers should call `actualExpression.evaluate()`:
 ```swift
 // Swift
 
-public func beNil<T>() -> Predicate<T> {
-    // Predicate.simpleNilable(..) automatically generates ExpectationMessage for
+public func beNil<T>() -> Matcher<T> {
+    // Matcher.simpleNilable(..) automatically generates ExpectationMessage for
     // us based on the string we provide to it. Also, the 'Nilable' postfix indicates
-    // that this Predicate supports matching against nil actualExpressions, instead of
-    // always resulting in a PredicateStatus.fail result -- which is true for
-    // Predicate.simple(..)
-    return Predicate.simpleNilable("be nil") { actualExpression in
+    // that this Matcher supports matching against nil actualExpressions, instead of
+    // always resulting in a MatcherStatus.fail result -- which is true for
+    // Matcher.simple(..)
+    return Matcher.simpleNilable("be nil") { actualExpression in
         let actualValue = try actualExpression.evaluate()
-        return PredicateStatus(bool: actualValue == nil)
+        return MatcherStatus(bool: actualValue == nil)
     }
 }
 ```
@@ -1398,16 +1640,16 @@ against the one provided to the matcher function, and passes if they are the sam
 ```swift
 // Swift
 
-public func haveDescription(description: String) -> Predicate<Printable?> {
-    return Predicate.simple("have description") { actual in
-        return PredicateStatus(bool: actual.evaluate().description == description)
+public func haveDescription(description: String) -> Matcher<Printable?> {
+    return Matcher.simple("have description") { actual in
+        return MatcherStatus(bool: actual.evaluate().description == description)
     }
 }
 ```
 
 ## Customizing Failure Messages
 
-When using `Predicate.simple(..)` or `Predicate.simpleNilable(..)`, Nimble
+When using `Matcher.simple(..)` or `Matcher.simpleNilable(..)`, Nimble
 outputs the following failure message when an expectation fails:
 
 ```swift
@@ -1416,36 +1658,36 @@ outputs the following failure message when an expectation fails:
 "expected to \(message), got <\(actual)>"
 ```
 
-You can customize this message by modifying the way you create a `Predicate`.
+You can customize this message by modifying the way you create a `Matcher`.
 
 ### Basic Customization
 
 For slightly more complex error messaging, receive the created failure message
-with `Predicate.define(..)`:
+with `Matcher.define(..)`:
 
 ```swift
 // Swift
 
-public func equal<T: Equatable>(_ expectedValue: T?) -> Predicate<T> {
-    return Predicate.define("equal <\(stringify(expectedValue))>") { actualExpression, msg in
+public func equal<T: Equatable>(_ expectedValue: T?) -> Matcher<T> {
+    return Matcher.define("equal <\(stringify(expectedValue))>") { actualExpression, msg in
         let actualValue = try actualExpression.evaluate()
         let matches = actualValue == expectedValue && expectedValue != nil
         if expectedValue == nil || actualValue == nil {
             if expectedValue == nil && actualValue != nil {
-                return PredicateResult(
+                return MatcherResult(
                     status: .fail,
                     message: msg.appendedBeNilHint()
                 )
             }
-            return PredicateResult(status: .fail, message: msg)
+            return MatcherResult(status: .fail, message: msg)
         }
-        return PredicateResult(bool: matches, message: msg)
+        return MatcherResult(bool: matches, message: msg)
     }
 }
 ```
 
 In the example above, `msg` is defined based on the string given to
-`Predicate.define`. The code looks akin to:
+`Matcher.define`. The code looks akin to:
 
 ```swift
 // Swift
@@ -1455,10 +1697,10 @@ let msg = ExpectationMessage.expectedActualValueTo("equal <\(stringify(expectedV
 
 ### Full Customization
 
-To fully customize the behavior of the Predicate, use the overload that expects
-a `PredicateResult` to be returned.
+To fully customize the behavior of the Matcher, use the overload that expects
+a `MatcherResult` to be returned.
 
-Along with `PredicateResult`, there are other `ExpectationMessage` enum values you can use:
+Along with `MatcherResult`, there are other `ExpectationMessage` enum values you can use:
 
 ```swift
 public indirect enum ExpectationMessage {
@@ -1502,22 +1744,53 @@ For a more comprehensive message that spans multiple lines, use
 .expectedActualValueTo("be true").appended(details: "use beFalse() for inverse\nor use beNil()")
 ```
 
-## Supporting Objective-C
+## Asynchronous Matchers
 
-To use a custom matcher written in Swift from Objective-C, you'll have
-to extend the `NMBObjCMatcher` class, adding a new class method for your
-custom matcher. The example below defines the class method
-`+[NMBObjCMatcher beNilMatcher]`:
+To write matchers against async expressions, return an instance of
+`AsyncMatcher`. The closure passed to `AsyncMatcher` is async, and the
+expression you evaluate is also asynchronous and needs to be awaited on.
 
 ```swift
 // Swift
 
-extension NMBObjCMatcher {
-    public class func beNilMatcher() -> NMBObjCMatcher {
-        return NMBObjCMatcher { actualBlock, failureMessage, location in
-            let block = ({ actualBlock() as NSObject? })
-            let expr = Expression(expression: block, location: location)
-            return beNil().matches(expr, failureMessage: failureMessage)
+actor CallRecorder<Arguments> {
+    private(set) var calls: [Arguments] = []
+    
+    func record(call: Arguments) {
+        calls.append(call)
+    }
+}
+
+func beCalled<Argument: Equatable>(with arguments: Argument) -> AsyncMatcher<CallRecorder<Argument>> {
+    AsyncMatcher { (expression: AsyncExpression<CallRecorder<Argument>>) in
+        let message = ExpectationMessage.expectedActualValueTo("be called with \(arguments)")
+        guard let calls = try await expression.evaluate()?.calls else {
+            return MatcherResult(status: .fail, message: message.appendedBeNilHint())
+        }
+        
+        return MatcherResult(bool: calls.contains(args), message: message.appended(details: "called with \(calls)"))
+    }
+}
+```
+
+In this example, we created an actor to act as an object to record calls to an
+async function. Then, we created the `beCalled(with:)` matcher to check if the
+actor has received a call with the given arguments.
+
+## Supporting Objective-C
+
+To use a custom matcher written in Swift from Objective-C, you'll have
+to extend the `NMBMatcher` class, adding a new class method for your
+custom matcher. The example below defines the class method
+`+[NMBMatcher beNilMatcher]`:
+
+```swift
+// Swift
+
+extension NMBMatcher {
+    @objc public class func beNilMatcher() -> NMBMatcher {
+        return NMBMatcher { actualExpression in
+            return try beNil().satisfies(actualExpression).toObjectiveC()
         }
     }
 }
@@ -1528,7 +1801,7 @@ The above allows you to use the matcher from Objective-C:
 ```objc
 // Objective-C
 
-expect(actual).to([NMBObjCMatcher beNilMatcher]());
+expect(actual).to([NMBMatcher beNilMatcher]());
 ```
 
 To make the syntax easier to use, define a C function that calls the
@@ -1537,8 +1810,8 @@ class method:
 ```objc
 // Objective-C
 
-FOUNDATION_EXPORT id<NMBMatcher> beNil() {
-    return [NMBObjCMatcher beNilMatcher];
+FOUNDATION_EXPORT NMBMatcher *beNil() {
+    return [NMBMatcher beNilMatcher];
 }
 ```
 
@@ -1560,119 +1833,36 @@ expect(nil).to(equal(nil)); // fails
 expect(nil).to(beNil());    // passes
 ```
 
-If your matcher does not want to match with nil, you use `NonNilMatcherFunc`
-and the `canMatchNil` constructor on `NMBObjCMatcher`. Using both types will
-automatically generate expected value failure messages when they're nil.
+If your matcher does not want to match with nil, you use `Matcher.define` or `Matcher.simple`. 
+Using those factory methods will automatically generate expected value failure messages when they're nil.
 
 ```swift
+public func beginWith<S: Sequence>(_ startingElement: S.Element) -> Matcher<S> where S.Element: Equatable {
+    return Matcher.simple("begin with <\(startingElement)>") { actualExpression in
+        guard let actualValue = try actualExpression.evaluate() else { return .fail }
 
-public func beginWith<S: Sequence, T: Equatable where S.Iterator.Element == T>(startingElement: T) -> NonNilMatcherFunc<S> {
-    return NonNilMatcherFunc { actualExpression, failureMessage in
-        failureMessage.postfixMessage = "begin with <\(startingElement)>"
-        if let actualValue = actualExpression.evaluate() {
-            var actualGenerator = actualValue.makeIterator()
-            return actualGenerator.next() == startingElement
-        }
-        return false
+        var actualGenerator = actualValue.makeIterator()
+        return MatcherStatus(bool: actualGenerator.next() == startingElement)
     }
 }
 
-extension NMBObjCMatcher {
-    public class func beginWithMatcher(expected: AnyObject) -> NMBObjCMatcher {
-        return NMBObjCMatcher(canMatchNil: false) { actualExpression, failureMessage in
-            let actual = actualExpression.evaluate()
+extension NMBMatcher {
+    @objc public class func beginWithMatcher(_ expected: Any) -> NMBMatcher {
+        return NMBMatcher { actualExpression in
+            let actual = try actualExpression.evaluate()
             let expr = actualExpression.cast { $0 as? NMBOrderedCollection }
-            return beginWith(expected).matches(expr, failureMessage: failureMessage)
+            return try beginWith(expected).satisfies(expr).toObjectiveC()
         }
     }
 }
 ```
-
-## Migrating from the Old Matcher API
-
-Previously (`<7.0.0`), Nimble supported matchers via the following types:
-
-- `Matcher`
-- `NonNilMatcherFunc`
-- `MatcherFunc`
-
-All of those types have been replaced by `Predicate`. While migrating can be a
-lot of work, Nimble currently provides several steps to aid migration of your
-custom matchers:
-
-### Minimal Step - Use `.predicate`
-
-Nimble provides an extension to the old types that automatically naively
-converts those types to the newer `Predicate`.
-
-```swift
-// Swift
-public func beginWith<S: Sequence, T: Equatable where S.Iterator.Element == T>(startingElement: T) -> Predicate<S> {
-    return NonNilMatcherFunc { actualExpression, failureMessage in
-        failureMessage.postfixMessage = "begin with <\(startingElement)>"
-        if let actualValue = actualExpression.evaluate() {
-            var actualGenerator = actualValue.makeIterator()
-            return actualGenerator.next() == startingElement
-        }
-        return false
-    }.predicate
-}
-```
-
-This is the simpliest way to externally support `Predicate` which allows easier
-composition than the old Nimble matcher interface, with minimal effort to change.
-
-### Convert to use `Predicate` Type with Old Matcher Constructor
-
-The second most convenient step is to utilize special constructors that
-`Predicate` supports that closely align to the constructors of the old Nimble
-matcher types.
-
-```swift
-// Swift
-public func beginWith<S: Sequence, T: Equatable where S.Iterator.Element == T>(startingElement: T) -> Predicate<S> {
-    return Predicate.fromDeprecatedClosure { actualExpression, failureMessage in
-        failureMessage.postfixMessage = "begin with <\(startingElement)>"
-        if let actualValue = actualExpression.evaluate() {
-            var actualGenerator = actualValue.makeIterator()
-            return actualGenerator.next() == startingElement
-        }
-        return false
-    }
-}
-```
-
-This allows you to completely drop the old types from your code, although the
-intended behavior may alter slightly to what is desired.
-
-### Convert to `Predicate` Type with Preferred Constructor
-
-Finally, you can convert to the native `Predicate` format using one of the
-constructors not used to assist in the migration.
-
-### Deprecation Roadmap
-
-Nimble 7 introduces `Predicate` but will support the old types with warning
-deprecations. A couple major releases of Nimble will remain backwards
-compatible with the old matcher api, although new features may not be
-backported.
-
-The deprecating plan is a 3 major versions removal. Which is as follows:
-
- 1. Introduce new `Predicate` API, deprecation warning for old matcher APIs.
-    (Nimble `v7.x.x` and `v8.x.x`)
- 2. Introduce warnings on migration-path features (`.predicate`,
-    `Predicate`-constructors with similar arguments to old API). (Nimble
-    `v9.x.x`)
- 3. Remove old API. (Nimble `v10.x.x`)
-
 
 # Installing Nimble
 
 > Nimble can be used on its own, or in conjunction with its sister
   project, [Quick](https://github.com/Quick/Quick). To install both
   Quick and Nimble, follow [the installation instructions in the Quick
-  Documentation](https://github.com/Quick/Quick/blob/master/Documentation/en-us/InstallingQuick.md).
+  Documentation](https://github.com/Quick/Quick/blob/main/Documentation/en-us/InstallingQuick.md).
 
 Nimble can currently be installed in one of two ways: using CocoaPods, or with
 git submodules.
@@ -1694,7 +1884,7 @@ install just Nimble.
 
 ## Installing Nimble via CocoaPods
 
-To use Nimble in CocoaPods to test your macOS, iOS or tvOS applications, add
+To use Nimble in CocoaPods to test your macOS, iOS, tvOS or watchOS applications, add
 Nimble to your podfile and add the ```use_frameworks!``` line to enable Swift
 support for CocoaPods.
 
@@ -1707,32 +1897,56 @@ source 'https://github.com/CocoaPods/Specs.git'
 
 target 'YOUR_APP_NAME_HERE_Tests', :exclusive => true do
   use_frameworks!
-  pod 'Nimble', '~> 6.0.0'
+  pod 'Nimble'
 end
 ```
 
 Finally run `pod install`.
 
-## Installing Nimble via Accio
+## Installing Nimble via Swift Package Manager
 
-Add the following to your Package.swift:
+### Xcode
+
+To install Nimble via Xcode's Swift Package Manager Integration:
+Select your project configuration, then the project tab, then the Package
+Dependencies tab. Click on the "plus" button at the bottom of the list,
+then follow the wizard to add Quick to your project. Specify
+`https://github.com/Quick/Nimble.git` as the url, and be sure to add
+Nimble as a dependency of your unit test target, not your app target.
+
+### Package.Swift
+
+To use Nimble with Swift Package Manager to test your applications, add Nimble
+to your `Package.Swift` and link it with your test target:
 
 ```swift
-.package(url: "https://github.com/Quick/Nimble.git", .upToNextMajor(from: "8.0.1")),
-```
+// swift-tools-version:5.5
 
-Next, add `Nimble` to your App targets dependencies like so:
+import PackageDescription
 
-```swift
-.testTarget(
-    name: "AppTests",
+let package = Package(
+    name: "MyAwesomeLibrary",
+    products: [
+        // ...
+    ],
     dependencies: [
-        "Nimble",
+        // ...
+        .package(url:  "https://github.com/Quick/Nimble.git", from: "12.0.0"),
+    ],
+    targets: [
+        // Targets are the basic building blocks of a package. A target can define a module or a test suite.
+        // Targets can depend on other targets in this package, and on products in packages this package depends on.
+        .target(
+            name: "MyAwesomeLibrary",
+            dependencies: ...),
+        .testTarget(
+            name: "MyAwesomeLibraryTests",
+            dependencies: ["MyAwesomeLibrary", "Nimble"]),
     ]
-),
+)
 ```
 
-Then run `accio update`.
+Please note that if you install Nimble using Swift Package Manager, then `raiseException` is not available.
 
 ## Using Nimble without XCTest
 

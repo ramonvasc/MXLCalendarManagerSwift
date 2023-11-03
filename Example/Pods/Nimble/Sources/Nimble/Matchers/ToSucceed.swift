@@ -1,5 +1,5 @@
 /**
- Used by the `toSucceed` matcher.
+ Used by the `succeed` matcher.
 
  This is the return type for the closure.
  */
@@ -14,23 +14,23 @@ public enum ToSucceedResult {
  Return `.succeeded` when the validation succeeds.
  Return `.failed` with a failure reason when the validation fails.
  */
-public func succeed() -> Predicate<() -> ToSucceedResult> {
-    return Predicate.define { actualExpression in
+public func succeed() -> Matcher<ToSucceedResult> {
+    return Matcher.define { actualExpression in
         let optActual = try actualExpression.evaluate()
         guard let actual = optActual else {
-            return PredicateResult(status: .fail, message: .fail("expected a closure, got <nil>"))
+            return MatcherResult(status: .fail, message: .fail("expected a ToSucceedResult, got <nil>"))
         }
 
-        switch actual() {
+        switch actual {
         case .succeeded:
-            return PredicateResult(
+            return MatcherResult(
                 bool: true,
-                message: .expectedCustomValueTo("succeed", "<succeeded>")
+                message: .expectedCustomValueTo("succeed", actual: "<succeeded>")
             )
         case .failed(let reason):
-            return PredicateResult(
+            return MatcherResult(
                 bool: false,
-                message: .expectedCustomValueTo("succeed", "<failed> because <\(reason)>")
+                message: .expectedCustomValueTo("succeed", actual: "<failed> because <\(reason)>")
             )
         }
     }

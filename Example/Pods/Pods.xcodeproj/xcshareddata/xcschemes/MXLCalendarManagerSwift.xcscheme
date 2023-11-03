@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1020"
+   LastUpgradeVersion = "1500"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D25578A7AA63BDDF1E2EE0DD683A5A6C"
-               BuildableName = "MXLCalendarManagerSwift.framework"
+               BuildableName = "MXLCalendarManagerSwift"
                BlueprintName = "MXLCalendarManagerSwift"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>
@@ -29,8 +29,6 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
       </Testables>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -46,13 +44,11 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D25578A7AA63BDDF1E2EE0DD683A5A6C"
-            BuildableName = "MXLCalendarManagerSwift.framework"
+            BuildableName = "MXLCalendarManagerSwift"
             BlueprintName = "MXLCalendarManagerSwift"
             ReferencedContainer = "container:Pods.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

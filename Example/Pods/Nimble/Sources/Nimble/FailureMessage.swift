@@ -28,7 +28,6 @@ public class FailureMessage: NSObject {
         }
     }
 
-    // swiftlint:disable:next identifier_name
     internal var _stringValueOverride: String?
     internal var hasOverriddenStringValue: Bool {
         return _stringValueOverride != nil
@@ -57,7 +56,7 @@ public class FailureMessage: NSObject {
         value = stripNewlines(value)
 
         if let extendedMessage = extendedMessage {
-            value += "\n\(stripNewlines(extendedMessage))"
+            value += "\n\(extendedMessage)"
         }
 
         if let userDescription = userDescription {

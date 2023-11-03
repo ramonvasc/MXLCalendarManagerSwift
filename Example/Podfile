@@ -1,5 +1,5 @@
 use_frameworks!
-platform :ios, '8.3'
+platform :ios, '13'
 
 target 'MXLCalendarManagerSwift_Example' do
   pod 'MXLCalendarManagerSwift', :git => 'https://github.com/ramonvasc/MXLCalendarManagerSwift.git'
