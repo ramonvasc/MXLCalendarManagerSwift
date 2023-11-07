@@ -124,7 +124,7 @@ public class MXLCalendarManager {
         return MXLCalendarAttendee(withRole: roleEnum, commonName: comomName, andUri: uri, participantStatus: partStatEnum)
     }
 
-    public func parse(icsString: String, localeIdentifier: String, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
+    public func parse(icsString: String, localeIdentifier: String = "en_US_POSIX", withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
         var regex = NSRegularExpression()
         do {
             regex = try NSRegularExpression(pattern: "\n +", options: .caseInsensitive)
