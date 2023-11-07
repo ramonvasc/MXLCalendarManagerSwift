@@ -88,17 +88,16 @@ public class MXLCalendarManager {
             }
 
             eventScanner = Scanner(string: attributesPointer as String)
-            let scannerStatus = eventScanner.scanUpTo("CN=", into: nil)
-            if scannerStatus {
-                eventScanner.scanUpTo(";", into: &holderPointer)
+            if eventScanner.scanUpToString("CN=") != nil {
+                holderPointer = eventScanner.scanUpToString(";") as? NSString
                 if let holderPointer = holderPointer {
                     comomName = holderPointer.replacingOccurrences(of: "CN=", with: "")
                 }
             }
             
             eventScanner = Scanner(string: attributesPointer as String)
-            eventScanner.scanUpTo("PARTSTAT=", into: nil)
-            eventScanner.scanUpTo(";", into: &holderPointer)
+            _ = eventScanner.scanUpToString("PARTSTAT=")
+            holderPointer = eventScanner.scanUpToString(";") as? NSString
             
             if let holderPointer = holderPointer {
                 partStat = holderPointer.replacingOccurrences(of: "PARTSTAT=", with: "")
