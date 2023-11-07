@@ -19,10 +19,7 @@ jobs:
       with:
         swift-version: "5.9.0"
     - name: Get swift version
-      run: swift --version
-    - uses: maxim-lobanov/setup-xcode@v1
-      with:
-        xcode-version: latest-stable    
+      run: swift --version 
     - uses: actions/checkout@v3
     - name: Build
       run: swift build -v
