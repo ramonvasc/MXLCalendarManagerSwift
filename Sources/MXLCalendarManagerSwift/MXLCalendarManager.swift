@@ -25,15 +25,11 @@
 
 import Foundation
 
-#if os(iOS)
-    import UIKit
-#endif
-
 public class MXLCalendarManager {
 
     public init() {}
 
-    public func scanICSFileAtRemoteURL(fileURL: URL, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
+    public func scanICSFileAtRemoteURL(fileURL: URL, localeIdentifier: String = "en_US_POSIX", withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
 
         var fileData = Data()
         DispatchQueue.global(qos: .default).async {
@@ -48,12 +44,12 @@ public class MXLCalendarManager {
                 guard let fileString = String(data: fileData, encoding: .utf8) else {
                     return
                 }
-                self.parse(icsString: fileString, withCompletionHandler: callback)
+                self.parse(icsString: fileString, localeIdentifier: localeIdentifier, withCompletionHandler: callback)
             }
         }
     }
 
-    public func scanICSFileatLocalPath(filePath: String, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
+    public func scanICSFileatLocalPath(filePath: String, localeIdentifier: String = "en_US_POSIX", withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
         var calendarFile = String()
         do {
             calendarFile = try String(contentsOfFile: filePath, encoding: .utf8)
@@ -62,13 +58,14 @@ public class MXLCalendarManager {
             return
         }
 
-        parse(icsString: calendarFile, withCompletionHandler: callback)
+        parse(icsString: calendarFile, localeIdentifier: localeIdentifier, withCompletionHandler: callback)
     }
 
     func createAttendee(string: String) -> MXLCalendarAttendee? {
         var eventScanner = Scanner(string: string)
         var uri = String()
         var role = String()
+        var partStat = String()
         var comomName = String()
         var uriPointer: NSString?
         var attributesPointer: NSString?
@@ -83,28 +80,51 @@ public class MXLCalendarManager {
         if let attributesPointer = attributesPointer {
             eventScanner = Scanner(string: attributesPointer as String)
 
-            _ = eventScanner.scanUpToString("ROLE")
+            _ = eventScanner.scanUpToString("ROLE=")
             holderPointer = eventScanner.scanUpToString(";") as? NSString
 
             if let holderPointer = holderPointer {
-                role = holderPointer.replacingOccurrences(of: "ROLE", with: "")
+                role = holderPointer.replacingOccurrences(of: "ROLE=", with: "")
             }
 
             eventScanner = Scanner(string: attributesPointer as String)
-            _ = eventScanner.scanUpToString("CN") as? NSString
+            if eventScanner.scanUpToString("CN=") != nil {
+                holderPointer = eventScanner.scanUpToString(";") as? NSString
+                if let holderPointer = holderPointer {
+                    comomName = holderPointer.replacingOccurrences(of: "CN=", with: "")
+                }
+            }
+            
+            eventScanner = Scanner(string: attributesPointer as String)
+            _ = eventScanner.scanUpToString("PARTSTAT=")
             holderPointer = eventScanner.scanUpToString(";") as? NSString
-
+            
             if let holderPointer = holderPointer {
-                comomName = holderPointer.replacingOccurrences(of: "CN", with: "")
+                partStat = holderPointer.replacingOccurrences(of: "PARTSTAT=", with: "")
             }
         }
+        
+        //ORGANIZER;CN=John Smith:MAILTO:jsmith@host.com
+        //ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=TENTATIVE;DELEGATED-FROM=
+        // "MAILTO:iamboss@host2.com";CN=Henry Cabot:MAILTO:hcabot@
+        // host2.com
+        //ATTENDEE;ROLE=NON-PARTICIPANT;PARTSTAT=DELEGATED;DELEGATED-TO=
+        // "MAILTO:hcabot@host2.com";CN=The Big Cheese:MAILTO:iamboss
+        // @host2.com
+        //ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=Jane Doe
+        // :MAILTO:jdoe@host1.com
         guard let roleEnum = Role(rawValue: role) else {
             return nil
         }
-        return MXLCalendarAttendee(withRole: roleEnum, commonName: comomName, andUri: uri)
+        
+        guard let partStatEnum = PartStat(rawValue: partStat) else {
+            return nil
+        }
+
+        return MXLCalendarAttendee(withRole: roleEnum, commonName: comomName, andUri: uri, participantStatus: partStatEnum)
     }
 
-    public func parse(icsString: String, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
+    public func parse(icsString: String, localeIdentifier: String = "en_US_POSIX", withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
         var regex = NSRegularExpression()
         do {
             regex = try NSRegularExpression(pattern: "\n +", options: .caseInsensitive)
@@ -323,20 +343,21 @@ public class MXLCalendarManager {
             }
 
             let calendarEvent = MXLCalendarEvent(withStartDate: startDateTimeString,
-                                         endDate: endDateTimeString,
-                                         createdAt: createdDateTimeString,
-                                         lastModified: lastModifiedDateTimeString,
-                                         uniqueID: eventUniqueIDString,
-                                         recurrenceID: recurrenceIDString,
-                                         summary: summaryString,
-                                         description: descriptionString,
-                                         location: locationString,
-                                         status: statusString,
-                                         recurrenceRules: repetitionString,
-                                         exceptionDates: exceptionDates,
-                                         exceptionRules: exceptionRuleString,
-                                         timeZoneIdentifier: timezoneIDString,
-                                         attendees: attendees)
+                                                 endDate: endDateTimeString,
+                                                 createdAt: createdDateTimeString,
+                                                 lastModified: lastModifiedDateTimeString,
+                                                 uniqueID: eventUniqueIDString,
+                                                 recurrenceID: recurrenceIDString,
+                                                 summary: summaryString,
+                                                 description: descriptionString,
+                                                 location: locationString,
+                                                 status: statusString,
+                                                 recurrenceRules: repetitionString,
+                                                 exceptionDates: exceptionDates,
+                                                 exceptionRules: exceptionRuleString,
+                                                 timeZoneIdentifier: timezoneIDString,
+                                                 attendees: attendees,
+                                                 localeIdentifier: localeIdentifier)
 
             calendar.add(event: calendarEvent)
         }
