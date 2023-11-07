@@ -69,7 +69,7 @@ To integrate MXLCalendarManagerSwift into your Xcode project using Swift Package
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ramonvasc/MXLCalendarManagerSwift", .upToNextMajor(from: "1.0.10"))
+    .package(url: "https://github.com/ramonvasc/MXLCalendarManagerSwift", .upToNextMajor(from: "1.1.0"))
 ]
 ```
 
