@@ -29,7 +29,7 @@ public class MXLCalendarManager {
 
     public init() {}
 
-    public func scanICSFileAtRemoteURL(fileURL: URL, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
+    public func scanICSFileAtRemoteURL(fileURL: URL, localeIdentifier: String = "en_US_POSIX", withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
 
         var fileData = Data()
         DispatchQueue.global(qos: .default).async {
@@ -44,12 +44,12 @@ public class MXLCalendarManager {
                 guard let fileString = String(data: fileData, encoding: .utf8) else {
                     return
                 }
-                self.parse(icsString: fileString, withCompletionHandler: callback)
+                self.parse(icsString: fileString, localeIdentifier: localeIdentifier, withCompletionHandler: callback)
             }
         }
     }
 
-    public func scanICSFileatLocalPath(filePath: String, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
+    public func scanICSFileatLocalPath(filePath: String, localeIdentifier: String = "en_US_POSIX", withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
         var calendarFile = String()
         do {
             calendarFile = try String(contentsOfFile: filePath, encoding: .utf8)
@@ -58,7 +58,7 @@ public class MXLCalendarManager {
             return
         }
 
-        parse(icsString: calendarFile, withCompletionHandler: callback)
+        parse(icsString: calendarFile, localeIdentifier: localeIdentifier, withCompletionHandler: callback)
     }
 
     func createAttendee(string: String) -> MXLCalendarAttendee? {
@@ -124,7 +124,7 @@ public class MXLCalendarManager {
         return MXLCalendarAttendee(withRole: roleEnum, commonName: comomName, andUri: uri, participantStatus: partStatEnum)
     }
 
-    public func parse(icsString: String, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
+    public func parse(icsString: String, localeIdentifier: String, withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
         var regex = NSRegularExpression()
         do {
             regex = try NSRegularExpression(pattern: "\n +", options: .caseInsensitive)
@@ -343,20 +343,21 @@ public class MXLCalendarManager {
             }
 
             let calendarEvent = MXLCalendarEvent(withStartDate: startDateTimeString,
-                                         endDate: endDateTimeString,
-                                         createdAt: createdDateTimeString,
-                                         lastModified: lastModifiedDateTimeString,
-                                         uniqueID: eventUniqueIDString,
-                                         recurrenceID: recurrenceIDString,
-                                         summary: summaryString,
-                                         description: descriptionString,
-                                         location: locationString,
-                                         status: statusString,
-                                         recurrenceRules: repetitionString,
-                                         exceptionDates: exceptionDates,
-                                         exceptionRules: exceptionRuleString,
-                                         timeZoneIdentifier: timezoneIDString,
-                                         attendees: attendees)
+                                                 endDate: endDateTimeString,
+                                                 createdAt: createdDateTimeString,
+                                                 lastModified: lastModifiedDateTimeString,
+                                                 uniqueID: eventUniqueIDString,
+                                                 recurrenceID: recurrenceIDString,
+                                                 summary: summaryString,
+                                                 description: descriptionString,
+                                                 location: locationString,
+                                                 status: statusString,
+                                                 recurrenceRules: repetitionString,
+                                                 exceptionDates: exceptionDates,
+                                                 exceptionRules: exceptionRuleString,
+                                                 timeZoneIdentifier: timezoneIDString,
+                                                 attendees: attendees,
+                                                 localeIdentifier: localeIdentifier)
 
             calendar.add(event: calendarEvent)
         }

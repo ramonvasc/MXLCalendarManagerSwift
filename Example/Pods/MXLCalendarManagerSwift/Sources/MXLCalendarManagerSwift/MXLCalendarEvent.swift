@@ -108,9 +108,11 @@ public class MXLCalendarEvent {
          exceptionDates: [String],
          exceptionRules: String,
          timeZoneIdentifier: String,
-         attendees: [MXLCalendarAttendee]) {
+         attendees: [MXLCalendarAttendee],
+         localeIdentifier: String) {
         self.calendar = Calendar(identifier: .gregorian)
         self.dateFormatter = DateFormatter()
+        self.dateFormatter.locale = Locale(identifier: localeIdentifier)
         self.dateFormatter.timeZone = TimeZone(identifier: timeZoneIdentifier.isEmpty ? "GMT" : timeZoneIdentifier)
         calendar?.timeZone = dateFormatter.timeZone
         self.dateFormatter.dateFormat = "yyyyMMdd HHmmss"
