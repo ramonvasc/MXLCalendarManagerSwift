@@ -276,6 +276,16 @@ public class MXLCalendarManager {
             _ = eventScanner.scanUpToString("DESCRIPTION:")
             descriptionString = eventScanner.scanUpToString("\n") ?? ""
             descriptionString = descriptionString.replacingOccurrences(of: "DESCRIPTION:", with: "").replacingOccurrences(of: "\r", with: "")
+            
+            if descriptionString.isEmpty {
+                eventScanner = Scanner(string: event)
+                eventScanner.charactersToBeSkipped = nil
+                _ = eventScanner.scanUpToString("DESCRIPTION;")
+                _ = eventScanner.scanUpToString(":")
+                _ = eventScanner.scanString(":")
+                descriptionString = eventScanner.scanUpToString("\n") ?? ""
+                descriptionString = descriptionString.replacingOccurrences(of: "DESCRIPTION;", with: "").replacingOccurrences(of: "\r", with: "")
+            }
 
             // Extract last modified datetime
             eventScanner = Scanner(string: event)
