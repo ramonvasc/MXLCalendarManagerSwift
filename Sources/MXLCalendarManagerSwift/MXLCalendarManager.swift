@@ -25,22 +25,32 @@
 
 import Foundation
 
+/// `MXLCalendarManager` is a class responsible for parsing iCalendar (.ics) files.
 public class MXLCalendarManager {
 
+    /// Initializes a new instance of the calendar manager.
     public init() {}
-
+    
+    /// Asynchronously scans and parses an iCalendar file from a remote URL.
+    /// - Parameters:
+    ///   - fileURL: The URL of the remote .ics file.
+    ///   - localeIdentifier: Locale identifier used for date parsing (default is "en_US_POSIX").
+    ///   - callback: The completion handler to call with the parsed calendar or an error.
     public func scanICSFileAtRemoteURL(fileURL: URL, localeIdentifier: String = "en_US_POSIX", withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
 
         var fileData = Data()
         DispatchQueue.global(qos: .default).async {
             do {
+                // Attempt to download the file data
                 fileData = try Data(contentsOf: fileURL)
             } catch (let downloadError) {
+                // Handle errors during download
                 callback(nil, downloadError)
                 return
             }
 
             DispatchQueue.main.async {
+                // Convert the file data to a string and parse it
                 guard let fileString = String(data: fileData, encoding: .utf8) else {
                     return
                 }
@@ -49,18 +59,29 @@ public class MXLCalendarManager {
         }
     }
 
+    /// Scans and parses an iCalendar file from a local file path.
+    /// - Parameters:
+    ///   - filePath: The local file path of the .ics file.
+    ///   - localeIdentifier: Locale identifier used for date parsing (default is "en_US_POSIX").
+    ///   - callback: The completion handler to call with the parsed calendar or an error.
     public func scanICSFileatLocalPath(filePath: String, localeIdentifier: String = "en_US_POSIX", withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
         var calendarFile = String()
         do {
+            // Attempt to read the file content as a string
             calendarFile = try String(contentsOfFile: filePath, encoding: .utf8)
         } catch (let fileError) {
+            // Handle file read errors
             callback(nil, fileError)
             return
         }
 
+        // Parse the calendar string
         parse(icsString: calendarFile, localeIdentifier: localeIdentifier, withCompletionHandler: callback)
     }
 
+    /// Creates an `MXLCalendarAttendee` object from a given attendee string.
+    /// - Parameter string: The attendee string in the .ics file format.
+    /// - Returns: An `MXLCalendarAttendee` object if parsing is successful, otherwise nil.
     func createAttendee(string: String) -> MXLCalendarAttendee? {
         var eventScanner = Scanner(string: string)
         var uri = String()
@@ -124,7 +145,17 @@ public class MXLCalendarManager {
         return MXLCalendarAttendee(withRole: roleEnum, commonName: comomName, andUri: uri, participantStatus: partStatEnum)
     }
 
+    /// Parses an iCalendar formatted string and constructs a `MXLCalendar` object.
+    /// - Parameters:
+    ///   - icsString: The iCalendar formatted string.
+    ///   - localeIdentifier: Locale identifier used for date parsing.
+    ///   - callback: The completion handler to call with the parsed calendar or an error.
     public func parse(icsString: String, localeIdentifier: String = "en_US_POSIX", withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
+        // Regular expression setup to remove new lines
+        // Splitting the ics string into events and parsing each event
+        // For each event, extract various properties like start time, end time, attendees, etc.
+        //
+        // Once all events are parsed, the callback is called with the constructed `MXLCalendar`.
         var regex = NSRegularExpression()
         do {
             regex = try NSRegularExpression(pattern: "\n +", options: .caseInsensitive)
@@ -276,6 +307,16 @@ public class MXLCalendarManager {
             _ = eventScanner.scanUpToString("DESCRIPTION:")
             descriptionString = eventScanner.scanUpToString("\n") ?? ""
             descriptionString = descriptionString.replacingOccurrences(of: "DESCRIPTION:", with: "").replacingOccurrences(of: "\r", with: "")
+            
+            if descriptionString.isEmpty {
+                eventScanner = Scanner(string: event)
+                eventScanner.charactersToBeSkipped = nil
+                _ = eventScanner.scanUpToString("DESCRIPTION;")
+                _ = eventScanner.scanUpToString(":")
+                _ = eventScanner.scanString(":")
+                descriptionString = eventScanner.scanUpToString("\n") ?? ""
+                descriptionString = descriptionString.replacingOccurrences(of: "DESCRIPTION;", with: "").replacingOccurrences(of: "\r", with: "")
+            }
 
             // Extract last modified datetime
             eventScanner = Scanner(string: event)
