@@ -777,6 +777,26 @@ END:VEVENT
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
                    falseOccurrences: [afterLastOccurrence])
     }
+    
+    func testDescriptionTagWithParameters() {
+        let eventString = """
+BEGIN:VEVENT
+UID:2018101539720180906T132000
+SUMMARY:15397 - 19th Century in Europe and Asia: Revolutions, Empires and Nations (the)
+CATEGORIES:Cours magistral
+DESCRIPTION;ENCODING=QUOTED-PRINTABLE:Enseignant(s) :\n - SCHEMPER Lukas :\n Enseignement :\n - AHIS 12A00 - 19th Century in Europe and Asia: Revolutions, Empires and Nations (the) - 201810
+DTSTART;TZID=Europe/Paris:20180906T132000
+DTEND;TZID=Europe/Paris:20180906T152000
+LOCATION:Salle : GRAND AMPH - 77 rue Bellot - 76600 Le Havre
+END:VEVENT
+"""
+        parseCalendarWithEvent(eventString: eventString)
+        
+        let expectedResult = "Enseignant(s) :- SCHEMPER Lukas :Enseignement :- AHIS 12A00 - 19th Century in Europe and Asia: Revolutions, Empires and Nations (the) - 201810"
+        let eventDescription = parsedCalendar.events.first?.eventDescription
+        XCTAssertNotNil(eventDescription)
+        XCTAssertEqual(eventDescription, expectedResult)
+    }
 
     // MARK - Helpers
 
