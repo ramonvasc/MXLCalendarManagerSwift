@@ -25,109 +25,129 @@
 
 import Foundation
 
+/// Represents a calendar with its events and their management functionalities.
 public class MXLCalendar {
+    // Dictionary to store events keyed by their date strings.
     public var daysOfEvents = [String: [MXLCalendarEvent]]()
+
+    // Tracks whether all events for a particular date have been loaded.
     public var loadedEvents = [String: Bool]()
 
+    // Optional properties for calendar and time zone.
     public var calendar: Calendar?
-
     public var timeZone: TimeZone?
-    public var events = [MXLCalendarEvent]()
 
+    // Use synchronization mechanisms such as locks to ensure that only one
+    // thread can access the events array at a time.
+    private let eventQueue = DispatchQueue(label: "com.mxlcalendar.eventQueue", attributes: .concurrent)
+    private var _events = [MXLCalendarEvent]()
+    
+    // Computed property to safely access events
+    public var events: [MXLCalendarEvent] {
+        get {
+            return eventQueue.sync {
+                _events
+            }
+        }
+        set {
+            eventQueue.async(flags: .barrier) {
+                self._events = newValue
+            }
+        }
+    }
+
+    // DateFormatter initialized for consistent date format usage.
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd"
+        return formatter
+    }()
+
+    /// Initializes a new instance of MXLCalendar.
     public init() {}
 
+    /// Adds an event to the general list of events.
+    /// - Parameter event: The `MXLCalendarEvent` to be added.
     public func add(event: MXLCalendarEvent) {
         events.append(event)
     }
 
+    /// Adds an event for a specific day, month, and year.
+    /// - Parameters:
+    ///   - event: The `MXLCalendarEvent` to be added.
+    ///   - day: The day of the event.
+    ///   - month: The month of the event.
+    ///   - year: The year of the event.
     public func add(event: MXLCalendarEvent, onDay day: Int, month: Int, year: Int) {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyddMM"
-
-        var components = Calendar.current.dateComponents([.day, .month, .year], from: Date())
+        var components = DateComponents()
         components.day = day
         components.month = month
         components.year = year
 
-        guard let calendarDate = Calendar.current.date(from: components) else {
-            return
-        }
-        add(event: event, onDate: formatter.string(from: calendarDate))
-    }
-
-    public func add(event: MXLCalendarEvent, onDate date: String) {
-        // Check if the event has already been logged today
-        guard var dateDaysOfEvents = daysOfEvents[date] else {
-            // If there are no current dates on today, create a new array and save it for the day
-            daysOfEvents[date] = [event]
-            return
-        }
-        for currentEvent in dateDaysOfEvents {
-            if currentEvent.eventUniqueID == event.eventUniqueID {
-                return
-            }
-        }
-
-        // If there are already events for this date...
-        if dateDaysOfEvents.contains(event) {
-            return
-        } else {
-            // If not, add it to the day
-            dateDaysOfEvents.append(event)
-            daysOfEvents[date] = dateDaysOfEvents
+        if let calendarDate = Calendar.current.date(from: components) {
+            add(event: event, onDate: calendarDate)
         }
     }
 
+    /// Adds an event for a specific date.
+    /// - Parameters:
+    ///   - event: The `MXLCalendarEvent` to be added.
+    ///   - date: The date for the event.
     public func add(event: MXLCalendarEvent, onDate date: Date) {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyyddMM"
-
-        add(event: event, onDate: dateFormatter.string(from: date))
-    }
-
-    public func loadedAllEventsForDate(date: Date) {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyyddMM"
-        loadedEvents[dateFormatter.string(from: date)] = NSNumber(value: true).boolValue
-    }
-
-    public func hasLoadedAllEventsFor(date: Date) -> Bool {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyyddMM"
         let dateString = dateFormatter.string(from: date)
-        if let loadedEvents = loadedEvents[dateString], loadedEvents {
-            return true
-        }
-        return false
+        add(event: event, onDateString: dateString)
     }
 
-    public func eventsFor(date: Date) -> [MXLCalendarEvent]? {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyyddMM"
-
-        if let dateDaysOfEvents = daysOfEvents[dateFormatter.string(from: date)] {
-            let sortedArray = (dateDaysOfEvents as NSArray).sortedArray(options: .concurrent) { (firstEvent, secondEvent) -> ComparisonResult in
-                guard let firstEvent = firstEvent as? MXLCalendarEvent, let secondEvent = secondEvent as? MXLCalendarEvent, let firstEventStartDate = firstEvent.eventStartDate, let secondEventStartDate = secondEvent.eventStartDate else {
-                    return ComparisonResult.orderedSame
-                }
-                let firstDateComponents = Calendar.current.dateComponents([.hour, .minute, .second], from: firstEventStartDate)
-                let secondDateComponents = Calendar.current.dateComponents([.hour, .minute, .second], from: secondEventStartDate)
-
-                guard let firstDate = Calendar.current.date(from: firstDateComponents), let secondDate = Calendar.current.date(from: secondDateComponents) else {
-                    return ComparisonResult.orderedSame
-                }
-                return firstDate.compare(secondDate)
-            } as? [MXLCalendarEvent]
-            daysOfEvents[dateFormatter.string(from: date)] = sortedArray
+    /// Private method for adding an event using a date string.
+    /// - Parameters:
+    ///   - event: The `MXLCalendarEvent` to be added.
+    ///   - dateString: The date string representing the date of the event.
+    private func add(event: MXLCalendarEvent, onDateString dateString: String) {
+        var eventsForDate = daysOfEvents[dateString, default: []]
+        if !eventsForDate.contains(where: { $0.eventUniqueID == event.eventUniqueID }) {
+            eventsForDate.append(event)
+            daysOfEvents[dateString] = eventsForDate
         }
-        return daysOfEvents[dateFormatter.string(from: date)]
+    }
+
+    /// Marks all events for a given date as loaded.
+    /// - Parameter date: The date for which events have been loaded.
+    public func loadedAllEventsForDate(date: Date) {
+        loadedEvents[dateFormatter.string(from: date)] = true
+    }
+    
+    /// Checks if all events for a given date have been loaded.
+    /// - Parameter date: The date to check for loaded events.
+    /// - Returns: `true` if all events for the date have been loaded; otherwise, `false`.
+    public func hasLoadedAllEventsFor(date: Date) -> Bool {
+        loadedEvents[dateFormatter.string(from: date)] ?? false
+    }
+
+    /// Returns all events for a given date, sorted by start time.
+    /// - Parameter date: The date for which to retrieve events.
+    /// - Returns: An array of `MXLCalendarEvent` for the given date, sorted by start time.
+    public func eventsFor(date: Date) -> [MXLCalendarEvent]? {
+        let dateString = dateFormatter.string(from: date)
+        
+        // Sorts the events based on their start date, handling optional dates safely.
+        return daysOfEvents[dateString]?.sorted(by: { (firstEvent, secondEvent) -> Bool in
+            switch (firstEvent.eventStartDate, secondEvent.eventStartDate) {
+            case let (firstDate?, secondDate?):
+                return firstDate < secondDate
+            case (nil, _):
+                return true // First event has no start date, so it comes first.
+            case (_, nil):
+                return false // Second event has no start date, so it comes second.
+            }
+        })
     }
 }
 
 public extension MXLCalendar {
+    /// Checks if there is an event occurring at a given time.
+    /// - Parameter time: The time to check for an event's occurrence.
+    /// - Returns: `true` if there is an event occurring at the given time; otherwise, `false`.
     func containsEvent(at time: Date) -> Bool {
-        return events.contains(where: { (event: MXLCalendarEvent) -> Bool in
-            return event.checkTime(targetTime: time)
-        })
+        events.contains { $0.checkTime(targetTime: time) }
     }
 }

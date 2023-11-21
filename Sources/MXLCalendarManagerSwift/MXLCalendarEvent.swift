@@ -26,90 +26,130 @@
 import Foundation
 import EventKit
 
+// Constants defining various frequency types for calendar events
 let DAILY_FREQUENCY = "DAILY"
 let WEEKLY_FREQUENCY = "WEEKLY"
 let MONTHLY_FREQUENCY = "MONTHLY"
 let YEARLY_FREQUENCY = "YEARLY"
 
+// Enumeration defining the types of rules for calendar events: Repetition or Exception
 public enum MXLCalendarEventRuleType {
     case MXLCalendarEventRuleTypeRepetition
     case MXLCalendarEventRuleTypeException
 }
 
+/// Represents an event in a calendar, supporting recurrence rules, exceptions, and other properties typical of iCalendar events.
 public class MXLCalendarEvent {
-    public var dateFormatter: DateFormatter
+    // MARK: - Properties
+    
+    // DateFormatter used for parsing and formatting event-related dates
+    public internal(set) var dateFormatter: DateFormatter
 
-    public var exRuleFrequency: String?
-    public var exRuleCount: String?
-    public var exRuleRuleWkSt: String?
-    public var exRuleInterval: String?
-    public var exRuleWeekStart: String?
-    public var exRuleUntilDate: Date?
+    // Properties related to exception rules (exRule) for the calendar event
+    public internal(set) var exRuleFrequency: String?
+    public internal(set) var exRuleCount: String?
+    public internal(set) var exRuleRuleWkSt: String?
+    public internal(set) var exRuleInterval: String?
+    public internal(set) var exRuleWeekStart: String?
+    public internal(set) var exRuleUntilDate: Date?
 
-    public var exRuleBySecond: [String]?
-    public var exRuleByMinute: [String]?
-    public var exRuleByHour: [String]?
-    public var exRuleByDay: [String]?
-    public var exRuleByMonthDay: [String]?
-    public var exRuleByYearDay: [String]?
-    public var exRuleByWeekNo: [String]?
-    public var exRuleByMonth: [String]?
-    public var exRuleBySetPos: [String]?
+    public internal(set) var exRuleBySecond: [String]?
+    public internal(set) var exRuleByMinute: [String]?
+    public internal(set) var exRuleByHour: [String]?
+    public internal(set) var exRuleByDay: [String]?
+    public internal(set) var exRuleByMonthDay: [String]?
+    public internal(set) var exRuleByYearDay: [String]?
+    public internal(set) var exRuleByWeekNo: [String]?
+    public internal(set) var exRuleByMonth: [String]?
+    public internal(set) var exRuleBySetPos: [String]?
 
-    public var repeatRuleFrequency: String?
-    public var repeatRuleCount: String?
-    public var repeatRuleRuleWkSt: String?
-    public var repeatRuleInterval: String?
-    public var repeatRuleWeekStart: String?
-    public var repeatRuleUntilDate: Date?
+    // Properties related to repetition rules (repeatRule) for the calendar event
+    public internal(set) var repeatRuleFrequency: String?
+    public internal(set) var repeatRuleCount: String?
+    public internal(set) var repeatRuleRuleWkSt: String?
+    public internal(set) var repeatRuleInterval: String?
+    public internal(set) var repeatRuleWeekStart: String?
+    public internal(set) var repeatRuleUntilDate: Date?
 
-    public var repeatRuleBySecond: [String]?
-    public var repeatRuleByMinute: [String]?
-    public var repeatRuleByHour: [String]?
-    public var repeatRuleByDay: [String]?
-    public var repeatRuleByMonthDay: [String]?
-    public var repeatRuleByYearDay: [String]?
-    public var repeatRuleByWeekNo: [String]?
-    public var repeatRuleByMonth: [String]?
-    public var repeatRuleBySetPos: [String]?
+    public internal(set) var repeatRuleBySecond: [String]?
+    public internal(set) var repeatRuleByMinute: [String]?
+    public internal(set) var repeatRuleByHour: [String]?
+    public internal(set) var repeatRuleByDay: [String]?
+    public internal(set) var repeatRuleByMonthDay: [String]?
+    public internal(set) var repeatRuleByYearDay: [String]?
+    public internal(set) var repeatRuleByWeekNo: [String]?
+    public internal(set) var repeatRuleByMonth: [String]?
+    public internal(set) var repeatRuleBySetPos: [String]?
 
-    public var eventExceptionDates: [Date] = [Date]()
+    // Collection of dates on which the event should not occur
+    public internal(set) var eventExceptionDates: [Date] = [Date]()
 
-    public var calendar: Calendar?
+    // Calendar used to manage date and time values
+    public internal(set) var calendar: Calendar?
 
-    public var eventStartDate: Date?
-    public var eventEndDate: Date?
-    public var eventCreatedDate: Date?
-    public var eventLastModifiedDate: Date?
+    // Properties representing the event's date and time characteristics
+    public internal(set) var eventStartDate: Date?
+    public internal(set) var eventEndDate: Date?
+    public internal(set) var eventCreatedDate: Date?
+    public internal(set) var eventLastModifiedDate: Date?
+    public internal(set) var eventIsAllDay: Bool?
 
-    public var eventIsAllDay: Bool?
+    // Properties representing the unique identifiers and descriptive details of the event
+    public internal(set) var eventUniqueID: String?
+    public internal(set) var eventRecurrenceID: String?
+    public internal(set) var eventSummary: String?
+    public internal(set) var eventDescription: String?
+    public internal(set) var eventLocation: String?
+    public internal(set) var eventStatus: String?
+    public internal(set) var sequence: String?
+    public internal(set) var transparency: String?
+    public internal(set) var dtstamp: String?
+    public internal(set) var attendees: [MXLCalendarAttendee]?
 
-    public var eventUniqueID: String?
-    public var eventRecurrenceID: String?
-    public var eventSummary: String?
-    public var eventDescription: String?
-    public var eventLocation: String?
-    public var eventStatus: String?
-    public var attendees: [MXLCalendarAttendee]?
+    public internal(set) var rruleString: String?
 
-    public var rruleString: String?
+    // MARK: - Initialization
 
+    /// Initializes a new calendar event with detailed properties.
+    /// - Parameters:
+    ///   - startString: Start date and time as a string.
+    ///   - endString: End date and time as a string.
+    ///   - createdString: Creation date and time as a string.
+    ///   - lastModifiedString: Last modified date and time as a string.
+    ///   - uniqueID: Unique identifier of the event.
+    ///   - recurrenceID: Identifier for the recurrence rule.
+    ///   - summary: Summary or title of the event.
+    ///   - description: Description of the event.
+    ///   - location: Location of the event.
+    ///   - status: Status of the event (e.g., confirmed, tentative).
+    ///   - sequence: Sequence number of the event.
+    ///   - transparency: Transparency of the event.
+    ///   - dtstamp: Timestamp of the event creation.
+    ///   - recurrenceRules: Recurrence rules as a string.
+    ///   - exceptionDates: Array of exception dates as strings.
+    ///   - exceptionRules: Exception rules as a string.
+    ///   - timeZoneIdentifier: Identifier of the event's time zone.
+    ///   - attendees: Array of attendees for the event.
+    ///   - localeIdentifier: Locale identifier used for date parsing.
     public init(withStartDate startString: String,
-         endDate endString: String,
-         createdAt createdString: String,
-         lastModified lastModifiedString: String,
-         uniqueID: String,
-         recurrenceID: String,
-         summary: String,
-         description: String,
-         location: String,
-         status: String,
-         recurrenceRules: String,
-         exceptionDates: [String],
-         exceptionRules: String,
-         timeZoneIdentifier: String,
-         attendees: [MXLCalendarAttendee],
-         localeIdentifier: String) {
+                endDate endString: String,
+                createdAt createdString: String,
+                lastModified lastModifiedString: String,
+                uniqueID: String,
+                recurrenceID: String,
+                summary: String,
+                description: String,
+                location: String,
+                status: String,
+                sequence: String,
+                transparency: String,
+                dtstamp: String,
+                recurrenceRules: String,
+                exceptionDates: [String],
+                exceptionRules: String,
+                timeZoneIdentifier: String,
+                attendees: [MXLCalendarAttendee],
+                localeIdentifier: String) {
         self.calendar = Calendar(identifier: .gregorian)
         self.dateFormatter = DateFormatter()
         self.dateFormatter.locale = Locale(identifier: localeIdentifier)
@@ -136,10 +176,19 @@ public class MXLCalendarEvent {
         self.eventDescription = description.replacingOccurrences(of: "\\", with: "")
         self.eventLocation = location.replacingOccurrences(of: "\\", with: "")
         self.eventStatus = status
+        self.sequence = sequence
+        self.transparency = transparency
+        self.dtstamp = dtstamp
         self.attendees = attendees
 
     }
 
+    
+    // MARK: - Helper Methods
+    
+    /// Converts a string representation of a date into a `Date` object.
+    /// - Parameter dateString: The date string to be converted.
+    /// - Returns: A `Date` object if the conversion is successful; otherwise, `nil`.
     public func dateFromString(dateString: String) -> Date? {
         var date: Date?
         let dateString = dateString.replacingOccurrences(of: "T", with: " ")
@@ -171,9 +220,24 @@ public class MXLCalendarEvent {
 
     }
 
+    /// Parses a rule from a given string starting and ending with specified patterns.
+    /// - Parameters:
+    ///   - string: The string to parse.
+    ///   - patternStart: The starting pattern to identify the beginning of the attribute.
+    ///   - patternEnd: The ending pattern to identify the end of the attribute.
+    /// - Returns: The parsed rule as a string.
+    private func parseRule(from string: String, startingWith patternStart: String, endingWith patternEnd: String) -> String {
+        let scanner = Scanner(string: string)
+        _ = scanner.scanUpToString(patternStart)
+        let parsedString = scanner.scanUpToString(patternEnd) ?? ""
+        return parsedString.replacingOccurrences(of: patternStart, with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    /// Parses a rule string and updates event properties based on the rule type.
+    /// - Parameters:
+    ///   - rule: The rule string to be parsed.
+    ///   - type: The type of the rule (repetition or exception).
     public func parseRules(rule: String, forType type: MXLCalendarEventRuleType) {
-        var ruleScanner = Scanner()
-
         let rulesArray = rule.components(separatedBy: ";") // Split up rules string into array
 
         var frequency = String()
@@ -189,13 +253,9 @@ public class MXLCalendarEvent {
 
         // Loop through each rule
         for rule in rulesArray {
-            ruleScanner = Scanner(string: rule)
-
             // If the rule is for the FREQuency
             if rule.range(of: "FREQ") != nil {
-                _ = ruleScanner.scanUpToString("=")
-                frequency = ruleScanner.scanUpToString(";") ?? ""
-                frequency = frequency.replacingOccurrences(of: "=", with: "")
+                frequency = parseRule(from: rule, startingWith: "=", endingWith: ";")
 
                 if type == .MXLCalendarEventRuleTypeRepetition {
                     repeatRuleFrequency = frequency
@@ -206,9 +266,7 @@ public class MXLCalendarEvent {
 
             // If the rule is COUNT
             if rule.range(of: "COUNT") != nil {
-                _ = ruleScanner.scanUpToString("=")
-                count = ruleScanner.scanUpToString(";") ?? ""
-                count = count.replacingOccurrences(of: "=", with: "")
+                count = parseRule(from: rule, startingWith: "=", endingWith: ";")
 
                 if type == . MXLCalendarEventRuleTypeRepetition {
                     repeatRuleCount = count
@@ -219,9 +277,7 @@ public class MXLCalendarEvent {
 
             // If the rule is for the UNTIL date
             if rule.range(of: "UNTIL") != nil {
-                _ = ruleScanner.scanUpToString("=")
-                untilString = ruleScanner.scanUpToString(";") ?? ""
-                untilString = untilString.replacingOccurrences(of: "=", with: "")
+                untilString = parseRule(from: rule, startingWith: "=", endingWith: ";")
 
                 if type == .MXLCalendarEventRuleTypeRepetition {
                     repeatRuleUntilDate = dateFromString(dateString: untilString)
@@ -232,9 +288,7 @@ public class MXLCalendarEvent {
 
             // If the rule is INTERVAL
             if rule.range(of: "INTERVAL") != nil {
-                _ = ruleScanner.scanUpToString("=")
-                interval = ruleScanner.scanUpToString(";") ?? ""
-                interval = interval.replacingOccurrences(of: "=", with: "")
+                interval = parseRule(from: rule, startingWith: "=", endingWith: ";")
 
                 if type == . MXLCalendarEventRuleTypeRepetition {
                     repeatRuleInterval = interval
@@ -245,9 +299,7 @@ public class MXLCalendarEvent {
 
             // If the rule is BYDAY
             if rule.range(of: "BYDAY") != nil {
-                _ = ruleScanner.scanUpToString("=")
-                byDay = ruleScanner.scanUpToString(";") ?? ""
-                byDay = byDay.replacingOccurrences(of: "=", with: "")
+                byDay = parseRule(from: rule, startingWith: "=", endingWith: ";")
 
                 if type == . MXLCalendarEventRuleTypeRepetition {
                     repeatRuleByDay = byDay.components(separatedBy: ",")
@@ -258,9 +310,7 @@ public class MXLCalendarEvent {
 
             // If the rule is BYMONTHDAY
             if rule.range(of: "BYMONTHDAY") != nil {
-                _ = ruleScanner.scanUpToString("=")
-                byMonthDay = ruleScanner.scanUpToString(";") ?? ""
-                byMonthDay = byMonthDay.replacingOccurrences(of: "=", with: "")
+                byMonthDay = parseRule(from: rule, startingWith: "=", endingWith: ";")
 
                 if type == . MXLCalendarEventRuleTypeRepetition {
                     repeatRuleByMonthDay = byMonthDay.components(separatedBy: ",")
@@ -271,9 +321,7 @@ public class MXLCalendarEvent {
 
             // If the rule is BYYEARDAY
             if rule.range(of: "BYYEARDAY") != nil {
-                _ = ruleScanner.scanUpToString("=")
-                byYearDay = ruleScanner.scanUpToString(";") ?? ""
-                byYearDay = byYearDay.replacingOccurrences(of: "=", with: "")
+                byYearDay = parseRule(from: rule, startingWith: "=", endingWith: ";")
 
                 if type == . MXLCalendarEventRuleTypeRepetition {
                     repeatRuleByYearDay = byYearDay.components(separatedBy: ",")
@@ -284,9 +332,7 @@ public class MXLCalendarEvent {
 
             // If the rule is BYWEEKNO
             if rule.range(of: "BYWEEKNO") != nil {
-                _ = ruleScanner.scanUpToString("=")
-                byWeekNo = ruleScanner.scanUpToString(";") ?? ""
-                byWeekNo = byWeekNo.replacingOccurrences(of: "=", with: "")
+                byWeekNo = parseRule(from: rule, startingWith: "=", endingWith: ";")
 
                 if type == . MXLCalendarEventRuleTypeRepetition {
                     repeatRuleByWeekNo = byWeekNo.components(separatedBy: ",")
@@ -297,9 +343,7 @@ public class MXLCalendarEvent {
 
             // If the rule is BYMONTH
             if rule.range(of: "BYMONTH=") != nil {
-                _ = ruleScanner.scanUpToString("=")
-                byMonth = ruleScanner.scanUpToString(";") ?? ""
-                byMonth = byMonth.replacingOccurrences(of: "=", with: "")
+                byMonth = parseRule(from: rule, startingWith: "=", endingWith: ";")
 
                 if type == . MXLCalendarEventRuleTypeRepetition {
                     repeatRuleByMonth = byMonth.components(separatedBy: ",")
@@ -310,9 +354,7 @@ public class MXLCalendarEvent {
 
             // If the rule is WKST
             if rule.range(of: "WKST") != nil {
-                _ = ruleScanner.scanUpToString("=")
-                weekStart = ruleScanner.scanUpToString(";") ?? ""
-                weekStart = weekStart.replacingOccurrences(of: "=", with: "")
+                weekStart = parseRule(from: rule, startingWith: "=", endingWith: ";")
 
                 if type == . MXLCalendarEventRuleTypeRepetition {
                     repeatRuleWeekStart = weekStart
@@ -323,6 +365,12 @@ public class MXLCalendarEvent {
         }
     }
 
+    /// Checks if the event occurs on a specified day, month, and year.
+    /// - Parameters:
+    ///   - day: The day to check.
+    ///   - month: The month to check.
+    ///   - year: The year to check.
+    /// - Returns: `true` if the event occurs on the specified date; otherwise, `false`.
     public func check(day: Int, month: Int, year: Int) -> Bool {
         guard var components = calendar?.dateComponents([.day, .month, .year], from: Date()) else {
             return false
@@ -335,6 +383,9 @@ public class MXLCalendarEvent {
 
     }
 
+    /// Determines if the event occurs on a given date.
+    /// - Parameter date: The date to check for the event's occurrence.
+    /// - Returns: `true` if the event occurs on the specified date; otherwise, `false`.
     public func checkDate(date: Date?) -> Bool {
         guard let date = date, let eventStartDate = eventStartDate, let eventEndDate = eventEndDate else {
             return false
@@ -578,7 +629,9 @@ public class MXLCalendarEvent {
 
     }
 
-    // This algorith functions the same as check(day, month, year) except rather than checking repeatRule parameters, it checks exRule
+    /// Evaluates if a given date is an exception to the event's occurrence.
+    /// - Parameter date: The date to check for an exception.
+    /// - Returns: `true` if the date is an exception; otherwise, `false`.
     public func exceptionOn(date: Date) -> Bool {
         // If the event does not repeat, the 'date' must be the event's start date for event to occur on this date
         if exRuleFrequency == nil {
@@ -751,7 +804,12 @@ public class MXLCalendarEvent {
 
         return false
     }
-
+    
+    /// Converts the event to an `EKEvent` for a specific date.
+    /// - Parameters:
+    ///   - date: The date for which to create the `EKEvent`.
+    ///   - eventStore: The event store used to create the `EKEvent`.
+    /// - Returns: An `EKEvent` if conversion is successful; otherwise, `nil`.
     public func convertToEKEventOn(date: Date, store eventStore: EKEventStore) -> EKEvent? {
         guard let eventStartDate = eventStartDate, let eventEndDate = eventEndDate, let eventSummary = eventSummary, let eventIsAllDay = eventIsAllDay else {
             return nil
@@ -780,6 +838,9 @@ public class MXLCalendarEvent {
         return event
     }
     
+    /// Checks if a specific time falls within the event's duration.
+    /// - Parameter targetTime: The time to check.
+    /// - Returns: `true` if the target time is within the event's duration; otherwise, `false`.
     public func checkTime(targetTime: Date) -> Bool {
         guard let firstStartTime = eventStartDate, let firstEndTime = eventEndDate else { return false }
         
@@ -826,6 +887,12 @@ public class MXLCalendarEvent {
         }
     }
 
+    /// Determines if a given date falls within a specified range.
+    /// - Parameters:
+    ///   - date: The date to check.
+    ///   - start: The start date of the range.
+    ///   - end: The end date of the range.
+    /// - Returns: `true` if the date falls within the range; otherwise, `false`.
     private func dateWithinRange(date: Date, start: Date, end: Date) -> Bool {
         guard start < end else { return false }
         
@@ -833,6 +900,9 @@ public class MXLCalendarEvent {
         return range.contains(date)
     }
     
+    /// Converts an integer representing a day of the week to its string abbreviation.
+    /// - Parameter day: The integer representing the day of the week.
+    /// - Returns: A string abbreviation of the day of the week.
     private func dayOfWeekFromInteger(day: Int) -> String {
         switch day {
         case 1:
@@ -854,6 +924,8 @@ public class MXLCalendarEvent {
         }
     }
 }
+
+// MARK: - Equatable Extension
 
 func ==<T: Equatable>(lhs: [T]?, rhs: [T]?) -> Bool {
     switch (lhs, rhs) {
