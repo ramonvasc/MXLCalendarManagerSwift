@@ -3,7 +3,6 @@ import XCTest
 
 final class MXLCalendarManagerTests: XCTestCase {
     private let manager = MXLCalendarManager()
-    private var parsedCalendar: MXLCalendar!
     private let dateFormatter = DateFormatter()
 
     override func setUp() {
@@ -13,7 +12,7 @@ final class MXLCalendarManagerTests: XCTestCase {
         dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
     }
 
-    func parseCalendarWithEvent(eventString: String) {
+    func parseCalendarWithEvent(eventString: String) async throws -> MXLCalendar {
         let calendarString =
             """
 BEGIN:VCALENDAR
@@ -56,16 +55,19 @@ END:VTIMEZONE
         """
         END:VCALENDAR
         """
-        manager.parse(icsString: calendarString) { (calendar: MXLCalendar?, error: Error?) in
-            XCTAssertNil(error)
-            XCTAssert(calendar?.events.count ?? 0 > 0)
-            self.parsedCalendar = calendar
-        }
+        
+        let calendar = try await manager.parse(icsString: calendarString)
+        
+        XCTAssertNotNil(calendar)
+        XCTAssertTrue(calendar.events.count > 0)
+        
+        return calendar
+        
     }
 
     // MARK: - Daily Tests
 
-    func testSingleOccurrence() {
+    func testSingleOccurrence() async throws {
         let eventString = """
 BEGIN:VEVENT
 DTSTART:20181213T150000Z
@@ -82,16 +84,17 @@ SUMMARY:Single occurrence test
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let firstOccurrence = createDatePack(middle: "2018-12-13 15:11:52",
                                              begin: "2018-12-13 15:00:01",
                                              end: "2018-12-13 16:00:00",
                                              after: "2018-12-13 16:00:01")
         testHelper(trueOccurrences: [firstOccurrence],
-                   falseOccurrences: [])
+                   falseOccurrences: [],
+                   parsedCalendar: parsedCalendar)
     }
 
-    func testOnceDailyNoEndTest() {
+    func testOnceDailyNoEndTest() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART:20190617T010000Z
@@ -109,7 +112,7 @@ SUMMARY:Every Day Event
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let occurrence = createDatePack(middle: "2020-06-17 01:11:52",
                                         begin: "2020-06-17 01:00:01",
                                         end: "2020-06-17 02:00:00",
@@ -120,10 +123,11 @@ END:VEVENT
                                             after: "2020-06-18 02:00:01")
 
         testHelper(trueOccurrences: [occurrence, nextOccurrence],
-                   falseOccurrences: [])
+                   falseOccurrences: [],
+                   parsedCalendar: parsedCalendar)
     }
 
-    func testAllDayOnce() {
+    func testAllDayOnce() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART;VALUE=DATE:20190406
@@ -140,16 +144,17 @@ SUMMARY:All Day Event
 TRANSP:TRANSPARENT
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let occurrence = createDatePack(middle: "2019-04-06 00:11:52",
                                         begin: "2019-04-06 00:00:01",
                                         end: "2019-04-07 00:00:00",
                                         after: "2019-04-07 00:00:01")
         testHelper(trueOccurrences: [occurrence],
-                   falseOccurrences: [])
+                   falseOccurrences: [],
+                   parsedCalendar: parsedCalendar)
     }
 
-    func testSpanDayOnce() {
+    func testSpanDayOnce() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART:20190401T000000Z
@@ -166,17 +171,18 @@ SUMMARY:Multi Day Event
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let occurrence = createDatePack(middle: "2019-04-01 00:11:52",
                                         begin: "2019-04-01 00:00:01",
                                         end: "2019-04-02 12:00:00",
                                         after: "2019-04-02 12:00:01")
         testHelper(trueOccurrences: [occurrence],
-                   falseOccurrences: [])
+                   falseOccurrences: [],
+                   parsedCalendar: parsedCalendar)
 
     }
 
-    func testEveryOtherDayNoEnd() {
+    func testEveryOtherDayNoEnd() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART;TZID=America/Los_Angeles:20190618T100000
@@ -194,7 +200,7 @@ SUMMARY:Every Other Day Event
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let occurrence = createDatePack(middle: "2019-06-18 17:11:52",
                                         begin: "2019-06-18 17:00:01",
                                         end: "2019-06-18 18:00:00",
@@ -209,10 +215,11 @@ END:VEVENT
                                            after: "2019-06-19 18:00:01")
 
         testHelper(trueOccurrences: [occurrence, occurrence2],
-                   falseOccurrences: [nonOccurrence])
+                   falseOccurrences: [nonOccurrence],
+                   parsedCalendar: parsedCalendar)
     }
 
-    func testDailyThatFallsOffAfterDate() {
+    func testDailyThatFallsOffAfterDate() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART:20190303T060000Z
@@ -230,7 +237,7 @@ SUMMARY:Daily that falls off after a date
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let firstOccurrence = createDatePack(middle: "2019-03-03 06:11:52",
                                              begin: "2019-03-03 06:00:01",
                                              end: "2019-03-03 07:00:00",
@@ -245,10 +252,11 @@ END:VEVENT
                                                  after: "2019-03-10 07:00:01")
 
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
-                   falseOccurrences: [afterLastOccurrence])
+                   falseOccurrences: [afterLastOccurrence],
+                   parsedCalendar: parsedCalendar)
     }
 
-    func testDailyThatFallsOffAfterThreeOccurrences() {
+    func testDailyThatFallsOffAfterThreeOccurrences() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART:20190318T180000Z
@@ -266,7 +274,7 @@ SUMMARY:Daily Event That falls off after 3 times
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let firstOccurrence = createDatePack(middle: "2019-03-18 18:11:52",
                                              begin: "2019-03-18 18:00:00",
                                              end: "2019-03-18 19:00:00",
@@ -281,10 +289,11 @@ END:VEVENT
                                                  after: "2019-03-21 19:00:01")
 
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
-                   falseOccurrences: [afterLastOccurrence])
+                   falseOccurrences: [afterLastOccurrence],
+                   parsedCalendar: parsedCalendar)
     }
 
-    func testDailySpanWithABreak() {
+    func testDailySpanWithABreak() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART:20180708T150000Z
@@ -303,7 +312,7 @@ SUMMARY:Daily Span With Break
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let firstOccurrence = createDatePack(middle: "2018-07-08 15:11:52",
                                              begin: "2018-07-08 15:00:52",
                                              end: "2018-07-08 15:59:59",
@@ -322,12 +331,13 @@ END:VEVENT
                                                  after: "2018-08-07 16:00:01")
 
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
-                   falseOccurrences: [breakOccurrence, afterLastOccurrence])
+                   falseOccurrences: [breakOccurrence, afterLastOccurrence],
+                   parsedCalendar: parsedCalendar)
     }
 
     // MARK: - Week Tests
 
-    func testOnceWeeklyNoEnd() {
+    func testOnceWeeklyNoEnd() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART;TZID=America/Los_Angeles:20190617T080000
@@ -345,7 +355,7 @@ SUMMARY:Morning Monday 8PST recurrance
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let firstOccurrence = createDatePack(middle: "2019-06-17 15:11:52",
                                              begin: "2019-06-17 15:00:01",
                                              end: "2019-06-17 16:00:00",
@@ -356,10 +366,11 @@ END:VEVENT
                                             after: "2019-04-05 16:00:01")
 
         testHelper(trueOccurrences: [firstOccurrence, nextOccurrence],
-                   falseOccurrences: [])
+                   falseOccurrences: [],
+                   parsedCalendar: parsedCalendar)
     }
 
-    func testOnceWeeklySpans2Days() {
+    func testOnceWeeklySpans2Days() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART:20190322T230000Z
@@ -377,7 +388,7 @@ SUMMARY:Weekly Event That spans 2 days
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let firstOccurrence = createDatePack(middle: "2019-03-22 23:11:52",
                                              begin: "2019-03-22 23:00:00",
                                              end: "2019-03-23 01:00:00",
@@ -392,10 +403,11 @@ END:VEVENT
                                                  after: "2019-04-13 01:00:01")
 
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
-                   falseOccurrences: [afterLastOccurrence])
+                   falseOccurrences: [afterLastOccurrence],
+                   parsedCalendar: parsedCalendar)
     }
 
-    func testOnceWeeklyThatFallsOffAfterThreeOccurances() {
+    func testOnceWeeklyThatFallsOffAfterThreeOccurances() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART:20190322T150000Z
@@ -413,7 +425,7 @@ SUMMARY:Weekly Event That Falls Off after 3 times
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let firstOccurrence = createDatePack(middle: "2019-03-22 15:11:52",
                                              begin: "2019-03-22 15:00:00",
                                              end: "2019-03-22 16:00:00",
@@ -428,10 +440,11 @@ END:VEVENT
                                                  after: "2019-04-12 16:00:01")
 
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
-                   falseOccurrences: [afterLastOccurrence])
+                   falseOccurrences: [afterLastOccurrence],
+                   parsedCalendar: parsedCalendar)
     }
 
-    func testOnceWeeklyThatFallsOffAfterDate() {
+    func testOnceWeeklyThatFallsOffAfterDate() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART:20190322T120000Z
@@ -449,7 +462,7 @@ SUMMARY:Weekly Event that falls off after a date
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let firstOccurrence = createDatePack(middle: "2019-03-22 12:11:52",
                                              begin: "2019-03-22 12:00:01",
                                              end: "2019-03-22 13:00:00",
@@ -468,10 +481,11 @@ END:VEVENT
                                                   after: "2019-04-12 13:00:01")
 
         testHelper(trueOccurrences: [firstOccurrence, nextOccurrence],
-                   falseOccurrences: [afterLastOccurrence, afterLastOccurrence2])
+                   falseOccurrences: [afterLastOccurrence, afterLastOccurrence2],
+                   parsedCalendar: parsedCalendar)
     }
 
-    func testWeeklySpanWithABreak() {
+    func testWeeklySpanWithABreak() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART:20170708T150000Z
@@ -490,7 +504,7 @@ SUMMARY:Weekly Event With Break
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let firstOccurrence = createDatePack(middle: "2017-07-08 15:11:52",
                                              begin: "2017-07-08 15:00:52",
                                              end: "2017-07-08 15:59:59",
@@ -509,12 +523,13 @@ END:VEVENT
                                                  after: "2017-09-15 16:01:01")
 
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
-                   falseOccurrences: [breakOccurrence, afterLastOccurrence])
+                   falseOccurrences: [breakOccurrence, afterLastOccurrence],
+                   parsedCalendar: parsedCalendar)
     }
 
     // MARK - Month Tests
 
-    func testOnceMonthlyNoEnd() {
+    func testOnceMonthlyNoEnd() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART;TZID=America/Los_Angeles:20190619T210000
@@ -532,7 +547,7 @@ SUMMARY:Span days Monthly
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let firstOccurrence = createDatePack(middle: "2019-06-20 4:11:52",
                                              begin: "2019-06-20 4:00:01",
                                              end: "2019-06-20 15:00:00",
@@ -542,10 +557,11 @@ END:VEVENT
                                             end: "2019-07-20 15:00:00",
                                             after: "2019-07-20 15:00:01")
         testHelper(trueOccurrences: [firstOccurrence, nextOccurrence],
-                   falseOccurrences: [])
+                   falseOccurrences: [],
+                   parsedCalendar: parsedCalendar)
     }
 
-    func testOnceMonthlyFallsOffAfterThreeTimes() {
+    func testOnceMonthlyFallsOffAfterThreeTimes() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART:20190103T010000Z
@@ -563,7 +579,7 @@ SUMMARY:Monthly Event Falls Off After 3 Times
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let firstOccurrence = createDatePack(middle: "2019-01-03 01:11:52",
                                              begin: "2019-01-03 01:00:52",
                                              end: "2019-01-03 02:00:00",
@@ -582,10 +598,11 @@ END:VEVENT
                                                  after: "2019-04-03 02:00:01")
 
         testHelper(trueOccurrences: [firstOccurrence, nextOccurrence, lastOccurrence],
-                   falseOccurrences: [afterLastOccurrence])
+                   falseOccurrences: [afterLastOccurrence],
+                   parsedCalendar: parsedCalendar)
     }
 
-    func testOnceMonthlyFallsOffAfterDate() {
+    func testOnceMonthlyFallsOffAfterDate() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART:20190103T150000Z
@@ -604,7 +621,7 @@ SUMMARY:Montly Event Falls Off After Feb 4
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let firstOccurrence = createDatePack(middle: "2019-01-03 15:11:52",
                                              begin: "2019-01-03 15:00:01",
                                              end: "2019-01-03 16:00:00",
@@ -619,10 +636,11 @@ END:VEVENT
                                                  after: "2019-03-03 16:00:01")
 
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
-                   falseOccurrences: [afterLastOccurrence])
+                   falseOccurrences: [afterLastOccurrence],
+                   parsedCalendar: parsedCalendar)
     }
 
-    func testMonthlySpanWithBreak() {
+    func testMonthlySpanWithBreak() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART:20170108T160000Z
@@ -642,7 +660,7 @@ TRANSP:OPAQUE
 END:VEVENT
 END:VCALENDAR
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let firstOccurrence = createDatePack(middle: "2017-01-08 16:11:52",
                                              begin: "2017-01-08 16:00:00",
                                              end: "2017-01-08 16:59:59",
@@ -661,12 +679,13 @@ END:VCALENDAR
                                                  after: "2017-06-08 17:01:01")
 
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
-                   falseOccurrences: [breakOccurrence, afterLastOccurrence])
+                   falseOccurrences: [breakOccurrence, afterLastOccurrence],
+                   parsedCalendar: parsedCalendar)
     }
 
     // MARK - Year Tests
 
-    func testOnceYearlyNoEnd() {
+    func testOnceYearlyNoEnd() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART;TZID=America/Los_Angeles:20191225T120000
@@ -689,7 +708,7 @@ TRIGGER:-P0DT0H30M0S
 END:VALARM
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let occurrence = createDatePack(middle: "2021-12-25 20:11:52",
                                         begin: "2021-12-25 20:00:01",
                                         end: "2021-12-25 21:00:00",
@@ -703,10 +722,11 @@ END:VEVENT
                                        end: "3022-12-25 21:00:00",
                                        after: "3022-12-25 21:00:01")
         testHelper(trueOccurrences: [occurrence, occurrence2, farFuture],
-                   falseOccurrences: [])
+                   falseOccurrences: [],
+                   parsedCalendar: parsedCalendar)
     }
 
-    func testOnceYearlyFallsOffAfter2Times() {
+    func testOnceYearlyFallsOffAfter2Times() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART:20191224T200000Z
@@ -724,7 +744,7 @@ SUMMARY:Christmas eve event drops off after 2 times
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let firstOccurrence = createDatePack(middle: "2019-12-24 20:11:52",
                                              begin: "2019-12-24 20:00:00",
                                              end: "2019-12-24 21:00:00",
@@ -739,10 +759,11 @@ END:VEVENT
                                                  after: "2021-12-24 21:00:01")
 
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
-                   falseOccurrences: [afterLastOccurrence])
+                   falseOccurrences: [afterLastOccurrence],
+                   parsedCalendar: parsedCalendar)
     }
 
-    func testOnceYearlyFallsOffAfterDate() {
+    func testOnceYearlyFallsOffAfterDate() async throws  {
         let eventString = """
 BEGIN:VEVENT
 DTSTART:20191223T200000Z
@@ -760,7 +781,7 @@ SUMMARY:Two days before chrismas drops off after 2020
 TRANSP:OPAQUE
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         let firstOccurrence = createDatePack(middle: "2019-12-23 20:11:52",
                                              begin: "2019-12-23 20:00:01",
                                              end: "2019-12-23 21:00:00",
@@ -775,10 +796,11 @@ END:VEVENT
                                                  after: "2021-12-23 21:00:01")
 
         testHelper(trueOccurrences: [firstOccurrence, lastOccurrence],
-                   falseOccurrences: [afterLastOccurrence])
+                   falseOccurrences: [afterLastOccurrence],
+                   parsedCalendar: parsedCalendar)
     }
     
-    func testDescriptionTagWithParameters() {
+    func testDescriptionTagWithParameters() async throws  {
         let eventString = """
 BEGIN:VEVENT
 UID:2018101539720180906T132000
@@ -790,7 +812,7 @@ DTEND;TZID=Europe/Paris:20180906T152000
 LOCATION:Salle : GRAND AMPH - 77 rue Bellot - 76600 Le Havre
 END:VEVENT
 """
-        parseCalendarWithEvent(eventString: eventString)
+        let parsedCalendar = try await parseCalendarWithEvent(eventString: eventString)
         
         let expectedResult = "Enseignant(s) :- SCHEMPER Lukas :Enseignement :- AHIS 12A00 - 19th Century in Europe and Asia: Revolutions, Empires and Nations (the) - 201810"
         let eventDescription = parsedCalendar.events.first?.eventDescription
@@ -814,7 +836,7 @@ END:VEVENT
                         after: dateFormatter.date(from: after))
     }
 
-    private func testHelper(trueOccurrences: [DatePack], falseOccurrences: [DatePack]) {
+    private func testHelper(trueOccurrences: [DatePack], falseOccurrences: [DatePack], parsedCalendar: MXLCalendar) {
         for occurrence in trueOccurrences {
             // Test middle
             XCTAssert(parsedCalendar.containsEvent(at: occurrence.middle), String(describing: occurrence.middle))

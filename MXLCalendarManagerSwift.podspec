@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'MXLCalendarManagerSwift'
-  s.version          = '1.1.0'
+  s.version          = '1.1.1'
   s.summary          = 'MXLCalendarManagerSwift is a library to parse iCalendar (.ICS) files'
 
   s.description      = 'A set of classes used to parse and handle iCalendar (.ICS) files originally implemented in Objective C by Kiran Panesar (https://github.com/KiranPanesar/MXLCalendarManager.git)'

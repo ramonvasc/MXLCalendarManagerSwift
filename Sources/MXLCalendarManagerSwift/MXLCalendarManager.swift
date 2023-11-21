@@ -25,132 +25,102 @@
 
 import Foundation
 
-/// `MXLCalendarManager` is a class responsible for parsing iCalendar (.ics) files.
+/// Manages the parsing of iCalendar (.ics) format files.
+/// Provides functionality to asynchronously load and parse calendar data from both remote URLs and local file paths.
 public class MXLCalendarManager {
 
     /// Initializes a new instance of the calendar manager.
     public init() {}
     
-    /// Asynchronously scans and parses an iCalendar file from a remote URL.
-    /// - Parameters:
-    ///   - fileURL: The URL of the remote .ics file.
-    ///   - localeIdentifier: Locale identifier used for date parsing (default is "en_US_POSIX").
-    ///   - callback: The completion handler to call with the parsed calendar or an error.
-    public func scanICSFileAtRemoteURL(fileURL: URL, localeIdentifier: String = "en_US_POSIX", withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
-
-        var fileData = Data()
-        DispatchQueue.global(qos: .default).async {
-            do {
-                // Attempt to download the file data
-                fileData = try Data(contentsOf: fileURL)
-            } catch (let downloadError) {
-                // Handle errors during download
-                callback(nil, downloadError)
-                return
-            }
-
-            DispatchQueue.main.async {
-                // Convert the file data to a string and parse it
-                guard let fileString = String(data: fileData, encoding: .utf8) else {
-                    return
-                }
-                self.parse(icsString: fileString, localeIdentifier: localeIdentifier, withCompletionHandler: callback)
-            }
-        }
+    /// Enumerates potential errors that can occur during the parsing process.
+    public enum CalendarError: Error {
+        case invalidData
     }
 
-    /// Scans and parses an iCalendar file from a local file path.
+    /// Asynchronously retrieves and parses an iCalendar file from a remote URL.
     /// - Parameters:
-    ///   - filePath: The local file path of the .ics file.
-    ///   - localeIdentifier: Locale identifier used for date parsing (default is "en_US_POSIX").
-    ///   - callback: The completion handler to call with the parsed calendar or an error.
-    public func scanICSFileatLocalPath(filePath: String, localeIdentifier: String = "en_US_POSIX", withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
-        var calendarFile = String()
-        do {
-            // Attempt to read the file content as a string
-            calendarFile = try String(contentsOfFile: filePath, encoding: .utf8)
-        } catch (let fileError) {
-            // Handle file read errors
-            callback(nil, fileError)
-            return
+    ///   - fileURL: URL pointing to the remote .ics file.
+    ///   - localeIdentifier: Identifier for locale-specific parsing (defaults to "en_US_POSIX").
+    /// - Returns: An `MXLCalendar` instance representing the parsed calendar data.
+    /// - Throws: An error if data retrieval or parsing fails.
+    public func scanICSFileAtRemoteURL(fileURL: URL, localeIdentifier: String = "en_US_POSIX") async throws -> MXLCalendar {
+        let (data, _) = try await URLSession.shared.data(from: fileURL)
+        guard let fileString = String(data: data, encoding: .utf8) else {
+            throw CalendarError.invalidData
         }
-
-        // Parse the calendar string
-        parse(icsString: calendarFile, localeIdentifier: localeIdentifier, withCompletionHandler: callback)
+        return try await parse(icsString: fileString, localeIdentifier: localeIdentifier)
     }
 
-    /// Creates an `MXLCalendarAttendee` object from a given attendee string.
-    /// - Parameter string: The attendee string in the .ics file format.
-    /// - Returns: An `MXLCalendarAttendee` object if parsing is successful, otherwise nil.
-    func createAttendee(string: String) -> MXLCalendarAttendee? {
-        var eventScanner = Scanner(string: string)
-        var uri = String()
-        var role = String()
-        var partStat = String()
-        var comomName = String()
-        var uriPointer: NSString?
-        var attributesPointer: NSString?
-        var holderPointer: NSString?
+    /// Asynchronously reads and parses an iCalendar file from a local file path.
+    /// - Parameters:
+    ///   - filePath: Path to the local .ics file.
+    ///   - localeIdentifier: Identifier for locale-specific parsing (defaults to "en_US_POSIX").
+    /// - Returns: An `MXLCalendar` instance representing the parsed calendar data.
+    /// - Throws: An error if file reading or parsing fails.
+    public func scanICSFileatLocalPath(filePath: String, localeIdentifier: String = "en_US_POSIX") async throws -> MXLCalendar {
+        let calendarFile = try String(contentsOfFile: filePath, encoding: .utf8)
+        return try await parse(icsString: calendarFile, localeIdentifier: localeIdentifier)
+    }
 
-        attributesPointer = eventScanner.scanUpToString(":") as? NSString
-        uriPointer = eventScanner.scanUpToString("\n") as? NSString
-        if let uriPointer = uriPointer {
-            uri = (uriPointer.substring(from: 1))
+    /// Extracts an attendee attribute from a given string based on the specified prefix.
+    /// - Parameters:
+    ///   - string: The string containing attendee information.
+    ///   - attributePrefix: The prefix used to identify the start of the desired attribute.
+    /// - Returns: The extracted attribute as a string.
+    private func extractAttendeeAttribute(from string: String, attributePrefix: String) -> String {
+        let scanner = Scanner(string: string)
+        _ = scanner.scanUpToString(attributePrefix)
+        guard let attribute = scanner.scanUpToString(";") else {
+            return ""
         }
+        return attribute.replacingOccurrences(of: attributePrefix, with: "")
+    }
 
-        if let attributesPointer = attributesPointer {
-            eventScanner = Scanner(string: attributesPointer as String)
-
-            _ = eventScanner.scanUpToString("ROLE=")
-            holderPointer = eventScanner.scanUpToString(";") as? NSString
-
-            if let holderPointer = holderPointer {
-                role = holderPointer.replacingOccurrences(of: "ROLE=", with: "")
-            }
-
-            eventScanner = Scanner(string: attributesPointer as String)
-            if eventScanner.scanUpToString("CN=") != nil {
-                holderPointer = eventScanner.scanUpToString(";") as? NSString
-                if let holderPointer = holderPointer {
-                    comomName = holderPointer.replacingOccurrences(of: "CN=", with: "")
-                }
-            }
-            
-            eventScanner = Scanner(string: attributesPointer as String)
-            _ = eventScanner.scanUpToString("PARTSTAT=")
-            holderPointer = eventScanner.scanUpToString(";") as? NSString
-            
-            if let holderPointer = holderPointer {
-                partStat = holderPointer.replacingOccurrences(of: "PARTSTAT=", with: "")
-            }
-        }
-        
-        //ORGANIZER;CN=John Smith:MAILTO:jsmith@host.com
-        //ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=TENTATIVE;DELEGATED-FROM=
-        // "MAILTO:iamboss@host2.com";CN=Henry Cabot:MAILTO:hcabot@
-        // host2.com
-        //ATTENDEE;ROLE=NON-PARTICIPANT;PARTSTAT=DELEGATED;DELEGATED-TO=
-        // "MAILTO:hcabot@host2.com";CN=The Big Cheese:MAILTO:iamboss
-        // @host2.com
-        //ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=Jane Doe
-        // :MAILTO:jdoe@host1.com
-        guard let roleEnum = Role(rawValue: role) else {
+    /// Creates an attendee object from a string representation.
+    /// - Parameter string: The string containing attendee information.
+    /// - Returns: An `MXLCalendarAttendee` object if parsing is successful, otherwise `nil`.
+    private func createAttendee(string: String) -> MXLCalendarAttendee? {
+        let eventScanner = Scanner(string: string)
+        guard let attributesString = eventScanner.scanUpToString(":"),
+              let uriString = eventScanner.scanUpToString("\n") else {
             return nil
         }
-        
-        guard let partStatEnum = PartStat(rawValue: partStat) else {
+
+        let uriIndex = uriString.index(uriString.startIndex, offsetBy: 1)
+        let uri = String(uriString[uriIndex...])
+
+        let role = extractAttendeeAttribute(from: attributesString, attributePrefix: "ROLE=")
+        let comomName = extractAttendeeAttribute(from: attributesString, attributePrefix: "CN=")
+        let partStat = extractAttendeeAttribute(from: attributesString, attributePrefix: "PARTSTAT=")
+
+        guard let roleEnum = Role(rawValue: role),
+              let partStatEnum = PartStat(rawValue: partStat) else {
             return nil
         }
 
         return MXLCalendarAttendee(withRole: roleEnum, commonName: comomName, andUri: uri, participantStatus: partStatEnum)
     }
-
-    /// Parses an iCalendar formatted string and constructs a `MXLCalendar` object.
+    
+    /// Parses an attribute from a given string starting and ending with specified patterns.
     /// - Parameters:
-    ///   - icsString: The iCalendar formatted string.
+    ///   - string: The string to parse.
+    ///   - patternStart: The starting pattern to identify the beginning of the attribute.
+    ///   - patternEnd: The ending pattern to identify the end of the attribute.
+    /// - Returns: The parsed attribute as a string.
+    private func parseAttribute(from string: String, startingWith patternStart: String, endingWith patternEnd: String) -> String {
+        let scanner = Scanner(string: string)
+        _ = scanner.scanUpToString(patternStart)
+        let parsedString = scanner.scanUpToString(patternEnd) ?? ""
+        return parsedString.replacingOccurrences(of: patternStart, with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    /// Asynchronously parses an iCalendar formatted string into an `MXLCalendar` object.
+    /// - Parameters:
+    ///   - icsString: The iCalendar formatted string to be parsed.
     ///   - localeIdentifier: Locale identifier used for date parsing.
-    ///   - callback: The completion handler to call with the parsed calendar or an error.
-    public func parse(icsString: String, localeIdentifier: String = "en_US_POSIX", withCompletionHandler callback: @escaping (MXLCalendar?, Error?) -> Void) {
+    /// - Returns: An `MXLCalendar` object constructed from the iCalendar string.
+    /// - Throws: An error if parsing fails.
+    public func parse(icsString: String, localeIdentifier: String = "en_US_POSIX") async throws -> MXLCalendar {
         // Regular expression setup to remove new lines
         // Splitting the ics string into events and parsing each event
         // For each event, extract various properties like start time, end time, attendees, etc.
@@ -160,25 +130,18 @@ public class MXLCalendarManager {
         do {
             regex = try NSRegularExpression(pattern: "\n +", options: .caseInsensitive)
         } catch (let error) {
-            print(error)
+            throw(error)
         }
+
         let range = NSRange(location: 0, length: (icsString as NSString).length)
         let icsStringWithoutNewLines = regex.stringByReplacingMatches(in: icsString, options: NSRegularExpression.MatchingOptions(rawValue: 0), range: range, withTemplate: "")
 
         // Pull out each line from the calendar file
         var eventsArray = icsStringWithoutNewLines.components(separatedBy: "BEGIN:VEVENT")
         let calendar = MXLCalendar()
-        var calendarStringPointer: NSString?
-        var calendarString = String()
 
         // Remove the first item (that's just all the stuff before the first VEVENT)
         if eventsArray.count > 0 {
-            let scanner = Scanner(string: eventsArray[0])
-            _ = scanner.scanUpToString("TZID:") as? NSString
-            calendarStringPointer = scanner.scanUpToString("\n") as? NSString
-            calendarString = String(calendarStringPointer ?? "")
-            calendarString = calendarString.replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "").replacingOccurrences(of: "TZID", with: "")
-
             eventsArray.remove(at: 0)
         }
 
@@ -206,70 +169,38 @@ public class MXLCalendarManager {
             var attendees = [MXLCalendarAttendee]()
 
             // Extract event time zone ID
-            eventScanner = Scanner(string: event)
-            _ = eventScanner.scanUpToString("DTSTART;TZID=")
-            timezoneIDString = eventScanner.scanUpToString(":") ?? ""
-            timezoneIDString = timezoneIDString.replacingOccurrences(of: "DTSTART;TZID=", with: "").replacingOccurrences(of: "\n", with: "")
+            timezoneIDString = parseAttribute(from: event, startingWith: "DTSTART;TZID=", endingWith: ":")
 
             if timezoneIDString.isEmpty {
                 // Extract event time zone ID
-                eventScanner = Scanner(string: event)
-                _ = eventScanner.scanUpToString("TZID:")
-                timezoneIDString = eventScanner.scanUpToString("\n") ?? ""
-                timezoneIDString = timezoneIDString.replacingOccurrences(of: "TZID:", with: "").replacingOccurrences(of: "\n", with: "")
+                timezoneIDString = parseAttribute(from: event, startingWith: "TZID:", endingWith: "\n")
             }
 
             // Extract start time
-            eventScanner = Scanner(string: event)
-            _ = eventScanner.scanUpToString(String(format: "DTSTART;TZID=%@:", timezoneIDString))
-            startDateTimeString = eventScanner.scanUpToString("\n") ?? ""
-            startDateTimeString = startDateTimeString.replacingOccurrences(of: String(format: "DTSTART;TZID=%@:", timezoneIDString), with: "").replacingOccurrences(of: "\r", with: "")
+            startDateTimeString = parseAttribute(from: event, startingWith: String(format: "DTSTART;TZID=%@:", timezoneIDString), endingWith: "\n")
 
             if startDateTimeString.isEmpty {
-                eventScanner = Scanner(string: event)
-                _ = eventScanner.scanUpToString("DTSTART:")
-                startDateTimeString = eventScanner.scanUpToString("\n") ?? ""
-                startDateTimeString = startDateTimeString.replacingOccurrences(of: "DTSTART:", with: "").replacingOccurrences(of: "\r", with: "")
+                startDateTimeString = parseAttribute(from: event, startingWith: "DTSTART:", endingWith: "\n")
 
                 if startDateTimeString.isEmpty {
-                    eventScanner = Scanner(string: event)
-                    _ = eventScanner.scanUpToString("DTSTART;VALUE=DATE:")
-                    startDateTimeString = eventScanner.scanUpToString("\n") ?? ""
-                    startDateTimeString = startDateTimeString.replacingOccurrences(of: "DTSTART;VALUE=DATE:", with: "").replacingOccurrences(of: "\r", with: "")
+                    startDateTimeString = parseAttribute(from: event, startingWith: "DTSTART;VALUE=DATE:", endingWith: "\n")
                 }
             }
 
             // Extract end time
-            eventScanner = Scanner(string: event)
-            _ = eventScanner.scanUpToString(String(format: "DTEND;TZID=%@:", timezoneIDString))
-            endDateTimeString = eventScanner.scanUpToString("\n") ?? ""
-            endDateTimeString = endDateTimeString.replacingOccurrences(of: String(format: "DTEND;TZID=%@:", timezoneIDString), with: "").replacingOccurrences(of: "\r", with: "")
-
+            endDateTimeString = parseAttribute(from: event, startingWith: String(format: "DTEND;TZID=%@:", timezoneIDString), endingWith: "\n")
             if endDateTimeString.isEmpty {
-                eventScanner = Scanner(string: event)
-                _ = eventScanner.scanUpToString("DTEND:")
-                endDateTimeString = eventScanner.scanUpToString("\n") ?? ""
-                endDateTimeString = endDateTimeString.replacingOccurrences(of: "DTEND:", with: "").replacingOccurrences(of: "\r", with: "")
-
+                endDateTimeString = parseAttribute(from: event, startingWith: "DTEND:", endingWith: "\n")
                 if endDateTimeString.isEmpty {
-                    eventScanner = Scanner(string: event)
-                    _ = eventScanner.scanUpToString("DTEND;VALUE=DATE:")
-                    endDateTimeString = eventScanner.scanUpToString("\n") ?? ""
-                    endDateTimeString = endDateTimeString.replacingOccurrences(of: "DTEND;VALUE=DATE:", with: "").replacingOccurrences(of: "\r", with: "")
+                    endDateTimeString = parseAttribute(from: event, startingWith: "DTEND;VALUE=DATE:", endingWith: "\n")
                 }
             }
 
             // Extract timestamp
-            eventScanner = Scanner(string: event)
-            _ = eventScanner.scanUpToString("DTSTAMP:")
-            timeStampString = eventScanner.scanUpToString("\n") ?? ""
-            timeStampString = timeStampString.replacingOccurrences(of: "DTSTAMP:", with: "").replacingOccurrences(of: "\r", with: "")
+            timeStampString = parseAttribute(from: event, startingWith: "DTSTAMP:", endingWith: "\n")
 
             // Extract the unique ID
-            eventScanner = Scanner(string: event)
-            _ = eventScanner.scanUpToString("UID:")
-            eventUniqueIDString = eventScanner.scanUpToString("\n") ?? ""
-            eventUniqueIDString = eventUniqueIDString.replacingOccurrences(of: "UID:", with: "").replacingOccurrences(of: "\r", with: "")
+            eventUniqueIDString = parseAttribute(from: event, startingWith: "UID:", endingWith: "\n")
 
             // Extract the attendees
             eventScanner = Scanner(string: event)
@@ -280,7 +211,7 @@ public class MXLCalendarManager {
                     attendeeString = eventScanner.scanUpToString("\n") ?? ""
                     if !attendeeString.isEmpty {
                         scannerStatus = true
-                        attendeeString = attendeeString.replacingOccurrences(of: "ATTENDEE;", with: "").replacingOccurrences(of: "\r", with: "")
+                        attendeeString = attendeeString.replacingOccurrences(of: "ATTENDEE;", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
                         if let attendee = createAttendee(string: attendeeString) {
                             attendees.append(attendee)
                         }
@@ -291,22 +222,13 @@ public class MXLCalendarManager {
             } while scannerStatus
 
             // Extract the recurrance ID
-            eventScanner = Scanner(string: event)
-            _ = eventScanner.scanUpToString(String(format: "RECURRENCE-ID;TZID=%@:", timezoneIDString))
-            recurrenceIDString = eventScanner.scanUpToString("\n") ?? ""
-            recurrenceIDString = recurrenceIDString.replacingOccurrences(of: String(format: "RECURRENCE-ID;TZID=%@:", timezoneIDString), with: "").replacingOccurrences(of: "\r", with: "")
+            recurrenceIDString = parseAttribute(from: event, startingWith: String(format: "RECURRENCE-ID;TZID=%@:", timezoneIDString), endingWith: "\n")
 
             // Extract the created datetime
-            eventScanner = Scanner(string: event)
-            _ = eventScanner.scanUpToString("CREATED:")
-            createdDateTimeString = eventScanner.scanUpToString("\n") ?? ""
-            createdDateTimeString = createdDateTimeString.replacingOccurrences(of: "CREATED:", with: "").replacingOccurrences(of: "\r", with: "")
+            createdDateTimeString = parseAttribute(from: event, startingWith: "CREATED:", endingWith: "\n")
 
             // Extract event description
-            eventScanner = Scanner(string: event)
-            _ = eventScanner.scanUpToString("DESCRIPTION:")
-            descriptionString = eventScanner.scanUpToString("\n") ?? ""
-            descriptionString = descriptionString.replacingOccurrences(of: "DESCRIPTION:", with: "").replacingOccurrences(of: "\r", with: "")
+            descriptionString = parseAttribute(from: event, startingWith: "DESCRIPTION:", endingWith: "\n")
             
             if descriptionString.isEmpty {
                 eventScanner = Scanner(string: event)
@@ -315,58 +237,34 @@ public class MXLCalendarManager {
                 _ = eventScanner.scanUpToString(":")
                 _ = eventScanner.scanString(":")
                 descriptionString = eventScanner.scanUpToString("\n") ?? ""
-                descriptionString = descriptionString.replacingOccurrences(of: "DESCRIPTION;", with: "").replacingOccurrences(of: "\r", with: "")
+                descriptionString = descriptionString.replacingOccurrences(of: "DESCRIPTION;", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
             }
 
             // Extract last modified datetime
-            eventScanner = Scanner(string: event)
-            _ = eventScanner.scanUpToString("LAST-MODIFIED:")
-            lastModifiedDateTimeString = eventScanner.scanUpToString("\n") ?? ""
-            lastModifiedDateTimeString = lastModifiedDateTimeString.replacingOccurrences(of: "LAST-MODIFIED:", with: "").replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "")
+            lastModifiedDateTimeString = parseAttribute(from: event, startingWith: "LAST-MODIFIED:", endingWith: "\n")
 
             // Extract the event location
-            eventScanner = Scanner(string: event)
-            _ = eventScanner.scanUpToString("LOCATION:")
-            locationString = eventScanner.scanUpToString("\n") ?? ""
-            locationString = locationString.replacingOccurrences(of: "LOCATION:", with: "").replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "")
+            locationString = parseAttribute(from: event, startingWith: "LOCATION:", endingWith: "\n")
 
             // Extract the event sequence
-            eventScanner = Scanner(string: event)
-            _ = eventScanner.scanUpToString("SEQUENCE:")
-            sequenceString = eventScanner.scanUpToString("\n") ?? ""
-            sequenceString = sequenceString.replacingOccurrences(of: "SEQUENCE:", with: "").replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "")
+            sequenceString = parseAttribute(from: event, startingWith: "SEQUENCE:", endingWith: "\n")
 
             // Extract the event status
-            eventScanner = Scanner(string: event)
-            _ = eventScanner.scanUpToString("STATUS:")
-            statusString = eventScanner.scanUpToString("\n") ?? ""
-            statusString = statusString.replacingOccurrences(of: "STATUS:", with: "").replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "")
-
+            statusString = parseAttribute(from: event, startingWith: "STATUS:", endingWith: "\n")
+            
             // Extract the event summary
-            eventScanner = Scanner(string: event)
-            _ = eventScanner.scanUpToString("SUMMARY:")
-            summaryString = eventScanner.scanUpToString("\n") ?? ""
-            summaryString = summaryString.replacingOccurrences(of: "SUMMARY:", with: "").replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "")
+            summaryString = parseAttribute(from: event, startingWith: "SUMMARY:", endingWith: "\n")
 
             // Extract the event transString
-            eventScanner = Scanner(string: event)
-            _ = eventScanner.scanUpToString("TRANSP:")
-            transString = eventScanner.scanUpToString("\n") ?? ""
-            transString = transString.replacingOccurrences(of: "TRANSP:", with: "").replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "")
+            transString = parseAttribute(from: event, startingWith: "TRANSP:", endingWith: "\n")
 
             // Extract the event repetition rules
-            eventScanner = Scanner(string: event)
-            _ = eventScanner.scanUpToString("RRULE:")
-            repetitionString = eventScanner.scanUpToString("\n") ?? ""
-            repetitionString = repetitionString.replacingOccurrences(of: "RRULE:", with: "").replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "")
+            repetitionString = parseAttribute(from: event, startingWith: "RRULE:", endingWith: "\n")
 
             // Extract the event exception rules
-            eventScanner = Scanner(string: event)
-            _ = eventScanner.scanUpToString("EXRULE:")
-            exceptionRuleString = eventScanner.scanUpToString("\n") ?? ""
-            exceptionRuleString = exceptionRuleString.replacingOccurrences(of: "EXRULE:", with: "").replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "")
+            exceptionRuleString = parseAttribute(from: event, startingWith: "EXRULE:", endingWith: "\n")
 
-            // Set up scanner for
+            // Set up scanner for EXDATE:
             eventScanner = Scanner(string: event)
             _ = eventScanner.scanUpToString("EXDATE:")
 
@@ -374,7 +272,7 @@ public class MXLCalendarManager {
                 _ = eventScanner.scanUpToString(":")
                 var exceptionString = String()
                 exceptionString = eventScanner.scanUpToString("\n") ?? ""
-                exceptionString = exceptionString.replacingOccurrences(of: ":", with: "").replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "")
+                exceptionString = exceptionString.replacingOccurrences(of: ":", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
 
                 if !exceptionString.isEmpty {
                     exceptionDates.append(exceptionString)
@@ -393,6 +291,9 @@ public class MXLCalendarManager {
                                                  description: descriptionString,
                                                  location: locationString,
                                                  status: statusString,
+                                                 sequence: sequenceString,
+                                                 transparency: transString,
+                                                 dtstamp: timeStampString,
                                                  recurrenceRules: repetitionString,
                                                  exceptionDates: exceptionDates,
                                                  exceptionRules: exceptionRuleString,
@@ -402,6 +303,7 @@ public class MXLCalendarManager {
 
             calendar.add(event: calendarEvent)
         }
-        callback(calendar, nil)
+        
+        return calendar
     }
 }
